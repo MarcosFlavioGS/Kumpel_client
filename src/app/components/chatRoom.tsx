@@ -7,7 +7,12 @@ interface Message {
   body: string;
 }
 
-export default function ChatRoom() {
+type ChatRoomProps = {
+  chatId: string,
+  user: string
+}
+
+export default function ChatRoom({ chatId, user }: ChatRoomProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [channel, setChannel] = useState<Channel | null>(null);
@@ -18,7 +23,7 @@ export default function ChatRoom() {
     socket.connect();
 
     // Join the channel and store it in state
-    const chatChannel = socket.channel("chat_room:lobby", {});
+    const chatChannel = socket.channel(`chat_room:${chatId}`, {});
     setChannel(chatChannel);
 
     chatChannel.join()
@@ -48,10 +53,10 @@ export default function ChatRoom() {
 
   return (
     <div>
-      <h1>Chat Room</h1>
+      <h1>{chatId}</h1>
       <div>
         {messages.map((msg, index) => (
-          <p key={index}>{msg.body}</p>
+          <p key={index}>{`${user}: ${msg.body}`}</p>
         ))}
       </div>
       <form onSubmit={sendMessage}>
