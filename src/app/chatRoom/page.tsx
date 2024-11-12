@@ -6,7 +6,9 @@ import styles from "../styles/chatRoom";
 import useStore from "../store";
 
 interface Message {
-  body: string;
+  body: string
+  user: string
+  code: string
 }
 
 export default function ChatRoom() {
@@ -16,6 +18,7 @@ export default function ChatRoom() {
 
   const user = useStore((state) => state.userName)
   const chatId = useStore((state) => state.chatId)
+  const code = useStore((state) => state.code)
 
   useEffect(() => {
     const socket = new Socket("ws://localhost:4000/socket");
@@ -41,7 +44,7 @@ export default function ChatRoom() {
   const sendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (input.trim() && channel) {
-      channel.push("new_message", { body: input });
+      channel.push("new_message", { body: input, user: user });
       setInput("");
     }
   };
@@ -54,7 +57,7 @@ export default function ChatRoom() {
         <div style={styles.messagesContainer}>
           {messages.map((msg, index) => (
             <p key={index} style={styles.message}>
-              <strong>{user}:</strong> {msg.body}
+              <strong>{msg.user}:</strong> {msg.body}
             </p>
           ))}
         </div>

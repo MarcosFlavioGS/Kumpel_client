@@ -58,7 +58,7 @@ export default function LandingPage() {
           style={styles.input}
         />
 
-        <button type="submit" style={{ padding: "8px", backgroundColor: "#007bff", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer" }}>
+        <button type="submit" style={styles.button}>
           Join Chat
         </button>
       </form>
