@@ -1,9 +1,9 @@
-"use client";
+'use client'
 
-import { useEffect, useState } from "react";
-import { Socket, Channel } from "phoenix";
-import styles from "../styles/chatRoom";
-import useStore from "../store";
+import { useEffect, useState } from 'react'
+import { Socket, Channel } from 'phoenix'
+import styles from '../styles/chatRoom'
+import useStore from '../store'
 
 interface Message {
   body: string
@@ -12,42 +12,43 @@ interface Message {
 }
 
 export default function ChatRoom() {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
-  const [channel, setChannel] = useState<Channel | null>(null);
+  const [messages, setMessages] = useState<Message[]>([])
+  const [input, setInput] = useState('')
+  const [channel, setChannel] = useState<Channel | null>(null)
 
   const user = useStore((state) => state.userName)
   const chatId = useStore((state) => state.chatId)
   const code = useStore((state) => state.code)
 
   useEffect(() => {
-    const socket = new Socket("ws://localhost:4000/socket");
-    socket.connect();
+    const socket = new Socket('ws://localhost:4000/socket')
+    socket.connect()
 
-    const chatChannel = socket.channel(`chat_room:${chatId}`, {});
-    setChannel(chatChannel);
+    const chatChannel = socket.channel(`chat_room:${chatId}`, {})
+    setChannel(chatChannel)
 
-    chatChannel.join()
-      .receive("ok", (resp) => console.log("Joined successfully", resp))
-      .receive("error", (resp) => console.log("Unable to join", resp));
+    chatChannel
+      .join()
+      .receive('ok', (resp) => console.log('Joined successfully', resp))
+      .receive('error', (resp) => console.log('Unable to join', resp))
 
-    chatChannel.on("new_message", (payload) => {
-      setMessages((prev) => [...prev, payload]);
-    });
+    chatChannel.on('new_message', (payload) => {
+      setMessages((prev) => [...prev, payload])
+    })
 
     return () => {
-      chatChannel.leave();
-      socket.disconnect();
-    };
-  }, []);
+      chatChannel.leave()
+      socket.disconnect()
+    }
+  }, [])
 
   const sendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     if (input.trim() && channel) {
-      channel.push("new_message", { body: input, user: user });
-      setInput("");
+      channel.push('new_message', { body: input, user: user })
+      setInput('')
     }
-  };
+  }
 
   return (
     <div style={styles.container}>
@@ -56,25 +57,31 @@ export default function ChatRoom() {
 
         <div style={styles.messagesContainer}>
           {messages.map((msg, index) => (
-            <p key={index} style={styles.message}>
+            <p
+              key={index}
+              style={styles.message}>
               <strong>{msg.user}:</strong> {msg.body}
             </p>
           ))}
         </div>
 
-        <form onSubmit={sendMessage} style={styles.form}>
+        <form
+          onSubmit={sendMessage}
+          style={styles.form}>
           <input
-            type="text"
+            type='text'
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type a message"
+            placeholder='Type a message'
             style={styles.input}
           />
-          <button type="submit" style={styles.button}>
+          <button
+            type='submit'
+            style={styles.button}>
             Send
           </button>
         </form>
       </div>
     </div>
-  );
+  )
 }

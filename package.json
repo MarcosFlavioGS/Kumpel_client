@@ -11,6 +11,7 @@
   "dependencies": {
     "next": "15.0.3",
     "phoenix": "^1.7.14",
+    "prettier": "^3.3.3",
     "react": "^18.3.1",
     "react-dom": "19.0.0-rc-66855b96-20241106",
     "zustand": "^5.0.1"
