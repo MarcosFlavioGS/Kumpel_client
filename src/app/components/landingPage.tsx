@@ -46,7 +46,7 @@ export default function LandingPage() {
           type='text'
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          placeholder='Enter your username'
+          placeholder='Username'
           style={styles.input}
         />
 
@@ -55,7 +55,7 @@ export default function LandingPage() {
           type='text'
           value={chatId}
           onChange={(e) => setChatId(e.target.value)}
-          placeholder='Enter chat room ID'
+          placeholder='Chat Room ID'
           style={styles.input}
         />
 
@@ -64,7 +64,7 @@ export default function LandingPage() {
           type='text'
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          placeholder='Enter access code'
+          placeholder='Access code'
           style={styles.input}
         />
 
