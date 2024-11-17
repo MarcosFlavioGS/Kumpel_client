@@ -24,7 +24,7 @@ export default function ChatRoom() {
     const socket = new Socket('ws://localhost:4000/socket')
     socket.connect()
 
-    const chatChannel = socket.channel(`chat_room:${chatId}`, {})
+    const chatChannel = socket.channel(`chat_room:${chatId}`, { code: code })
     setChannel(chatChannel)
 
     chatChannel
