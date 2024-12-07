@@ -74,7 +74,7 @@ export default function ChatRoom() {
           />
           <button
             type='submit'
-            style={styles.button}>
+            style={styles.send_button}>
             Send
           </button>
         </form>
