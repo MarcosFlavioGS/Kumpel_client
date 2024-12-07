@@ -77,10 +77,6 @@ export default function ChatRoom() {
   if (connectionError) {
     return <div style={styles.errorMessage}>{connectionError}</div>
   }
-  // // If the values aren't set, render the LandingPage
-  // if (!isReady) {
-  //   return <LandingPage />
-  // }
 
   return !isReady ? (
     <LandingPage />

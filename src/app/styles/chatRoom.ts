@@ -48,7 +48,7 @@ const styles: {
     width: '100%',
     maxHeight: '300px',
     overflowY: 'scroll',
-    scrollBehavior: 'auto',
+    scrollBehavior: 'smooth',
     padding: '8px',
     marginBottom: '16px',
     backgroundColor: '#3A4158',
@@ -84,6 +84,8 @@ const styles: {
     transition: 'background-color 0.3s'
   },
   send_button: {
+    width: '100px', // Set specific width
+    height: '40px', // Set specific height
     padding: '8px 16px',
     backgroundColor: '#007bff',
     color: '#2E2F42',
