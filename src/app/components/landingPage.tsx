@@ -1,7 +1,6 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
 import useStore from '../store'
 import styles from '../styles/chatRoom'
 
@@ -10,10 +9,17 @@ export default function LandingPage() {
   const [chatId, setChatId] = useState('')
   const [code, setCode] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
-  const router = useRouter()
   const setUserName = useStore((state) => state.setUserName)
   const setChatIdState = useStore((state) => state.setChatId)
   const setCodeState = useStore((state) => state.setCode)
+
+  // Reset the store when landing page is loaded
+  useEffect(() => {
+    // Clear store values when LandingPage is first mounted
+    setUserName('')
+    setChatIdState('')
+    setCodeState('')
+  }, [])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -24,7 +30,6 @@ export default function LandingPage() {
       setUserName(username)
       setChatIdState(chatId)
       setCodeState(code)
-      router.push('/chatRoom')
     }
   }
 
