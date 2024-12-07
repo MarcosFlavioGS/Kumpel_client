@@ -17,6 +17,7 @@ export default function ChatRoom() {
   const [input, setInput] = useState('')
   const [channel, setChannel] = useState<Channel | null>(null)
   const [connectionError, setConnectionError] = useState<string>('')
+  const [pingResponse, setPingResponse] = useState('')
 
   const user = useStore((state) => state.userName)
   const chatId = useStore((state) => state.chatId)
@@ -51,6 +52,16 @@ export default function ChatRoom() {
         setMessages((prev) => [...prev, payload])
       })
 
+      chatChannel
+        .push('ping', { id: chatId })
+        .receive('ok', (resp) => {
+          console.log('PING: ', resp)
+          setPingResponse(resp)
+        })
+        .receive('error', (resp) => {
+          console.log('Error on ping: ', resp)
+        })
+
       return () => {
         chatChannel.leave()
         socket.disconnect()
@@ -83,7 +94,7 @@ export default function ChatRoom() {
   ) : (
     <div style={styles.container}>
       <div style={styles.chatBox}>
-        <h1 style={styles.header}>Chat Room: {chatId}</h1>
+        <h1 style={styles.header}>Chat Room: {pingResponse}</h1>
 
         <div
           ref={messagesContainerRef}
