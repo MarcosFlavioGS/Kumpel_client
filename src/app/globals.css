@@ -7,6 +7,13 @@
   --foreground: #171717;
 }
 
+@font-face {
+  font-family: 'Meslo Nerd Font';
+  src: url('/fonts/MesloLGSNerdFont-Regular.ttf') format('trueType');
+  font-weight: normal;
+  font-style: normal;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -17,5 +24,5 @@
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Meslo Nerd Font';
 }

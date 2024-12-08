@@ -49,7 +49,7 @@ export default function ChatRoom() {
         })
 
       chatChannel.on('new_message', (payload) => {
-        setMessages((prev) => [...prev, payload])
+        setMessages((prev) => [payload, ...prev])
       })
 
       chatChannel
@@ -103,7 +103,7 @@ export default function ChatRoom() {
             <p
               key={index}
               style={styles.message}>
-              <strong>{msg.user}:</strong> {msg.body}
+              <span style={styles.user}>{msg.user}:</span> <span style={styles.body}>{msg.body}</span>
             </p>
           ))}
         </div>

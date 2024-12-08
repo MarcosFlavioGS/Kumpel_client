@@ -7,6 +7,8 @@ const styles: {
   errorMessage: CSSProperties // Added
   messagesContainer: CSSProperties
   message: CSSProperties
+  user: CSSProperties
+  body: CSSProperties
   form: CSSProperties
   input: CSSProperties
   button: CSSProperties
@@ -21,7 +23,7 @@ const styles: {
     padding: '16px'
   },
   chatBox: {
-    width: '100%',
+    width: 'auto',
     maxWidth: '400px',
     padding: '24px',
     borderRadius: '8px',
@@ -40,14 +42,16 @@ const styles: {
   errorMessage: {
     // Added
     color: '#800020',
-    fontSize: '18px',
+    fontSize: '20px',
     marginBottom: '16px',
     textAlign: 'center'
   },
   messagesContainer: {
     width: '100%',
-    maxHeight: '300px',
+    height: '500px', // Fixed height
     overflowY: 'scroll',
+    display: 'flex', // Enable Flexbox
+    flexDirection: 'column-reverse', // Stack messages from bottom to top
     scrollBehavior: 'smooth',
     padding: '8px',
     marginBottom: '16px',
@@ -56,12 +60,20 @@ const styles: {
     borderRadius: '4px'
   },
   message: {
-    color: '#fff',
+    color: '#fff', // Default text color for messages
     marginBottom: '8px'
+  },
+  user: {
+    color: '#00ff00', // Example color for the user (green)
+    fontWeight: 'bold' // Optional for emphasis
+  },
+  body: {
+    color: '#ffffff' // Example color for the message body (white)
   },
   form: {
     display: 'flex',
-    width: '100%'
+    width: '100%',
+    gap: '8px'
   },
   input: {
     flex: 1,
@@ -85,7 +97,7 @@ const styles: {
   },
   send_button: {
     width: '100px', // Set specific width
-    height: '40px', // Set specific height
+    height: '41px', // Set specific height
     padding: '8px 16px',
     backgroundColor: '#007bff',
     color: '#2E2F42',
