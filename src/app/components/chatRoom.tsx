@@ -10,6 +10,18 @@ interface Message {
   body: string
   user: string
   code: string
+  color: string
+}
+
+enum UserColor {
+  Red = '#FF5733',
+  Green = '#00ff00',
+  Blue = '#3357FF',
+  Purple = '#9B33FF',
+  Orange = '#FF9A33',
+  Yellow = '#FFEB33',
+  Cyan = '#33FFEB',
+  Pink = '#FF33A6'
 }
 
 export default function ChatRoom() {
@@ -18,6 +30,7 @@ export default function ChatRoom() {
   const [channel, setChannel] = useState<Channel | null>(null)
   const [connectionError, setConnectionError] = useState<string>('')
   const [pingResponse, setPingResponse] = useState('')
+  const [userColor, setUserColor] = useState('')
 
   const user = useStore((state) => state.userName)
   const chatId = useStore((state) => state.chatId)
@@ -28,6 +41,13 @@ export default function ChatRoom() {
 
   // Check if userName, chatId, and code are available
   const isReady = user && chatId && code
+
+  useEffect(() => {
+    const colors = Object.values(UserColor) // Get an array of enum values
+    const randomIndex = Math.floor(Math.random() * colors.length) // Generate a random index
+
+    setUserColor(colors[randomIndex])
+  }, [])
 
   useEffect(() => {
     if (isReady) {
@@ -79,7 +99,7 @@ export default function ChatRoom() {
   const sendMessage = (e: React.FormEvent) => {
     e.preventDefault()
     if (input.trim() && channel) {
-      channel.push('new_message', { body: input, user: user })
+      channel.push('new_message', { body: input, user: user, color: userColor })
       setInput('')
     }
   }
@@ -94,7 +114,9 @@ export default function ChatRoom() {
   ) : (
     <div style={styles.container}>
       <div style={styles.chatBox}>
-        <h1 style={styles.header}>Chat Room: {pingResponse}</h1>
+        <h1 style={{ ...styles.header, color: userColor }}>
+          {user} : {pingResponse}
+        </h1>
 
         <div
           ref={messagesContainerRef}
@@ -103,7 +125,12 @@ export default function ChatRoom() {
             <p
               key={index}
               style={styles.message}>
-              <span style={styles.user}>{msg.user}:</span> <span style={styles.body}>{msg.body}</span>
+              <span
+                style={{ ...styles.user, color: msg.color || '#00ff00' }} // Default to green if no color is provided
+              >
+                {msg.user}:
+              </span>{' '}
+              <span style={styles.body}>{msg.body}</span>
             </p>
           ))}
         </div>
