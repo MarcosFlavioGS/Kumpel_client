@@ -1,6 +1,6 @@
 # Kumpel Chat 💬
 
-[Kumpel Chat App](kumpel-chat.vercel.app) for the main page.
+[Kumpel Chat App](https://kumpel-chat.vercel.app) for the main page.
 
 ## Overview
 
