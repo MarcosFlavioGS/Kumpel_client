@@ -54,6 +54,13 @@ export default function ChatRoom() {
   }, [])
 
   useEffect(() => {
+    const colors = Object.values(UserColor) // Get an array of enum values
+    const randomIndex = Math.floor(Math.random() * colors.length) // Generate a random index
+
+    setUserColor(colors[randomIndex])
+  }, [])
+
+  useEffect(() => {
     if (isReady) {
       const socket = new Socket('wss://kumpel-back.fly.dev/socket')
       socket.connect()
