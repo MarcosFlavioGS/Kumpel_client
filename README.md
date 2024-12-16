@@ -1,5 +1,7 @@
 # Kumpel Chat 💬
 
+[Kumpel Chat App](kumpel-chat.vercel.app) for the main page.
+
 ## Overview
 
 Kumpel Chat is a real-time chat room application built with Next.js, utilizing Phoenix WebSocket for live communication. The app allows users to join chat rooms with a username, chat ID, and access code.
