@@ -12,14 +12,14 @@
     "next": "15.0.3",
     "phoenix": "^1.7.14",
     "prettier": "^3.3.3",
-    "react": "^18.3.1",
-    "react-dom": "19.0.0-rc-66855b96-20241106",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
     "zustand": "^5.0.1"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/phoenix": "^1.6.5",
-    "@types/react": "^18",
+    "@types/react": "^19",
     "@types/react-dom": "^18",
     "eslint": "^8",
     "eslint-config-next": "15.0.3",

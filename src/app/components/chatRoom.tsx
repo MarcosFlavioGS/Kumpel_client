@@ -51,7 +51,7 @@ export default function ChatRoom() {
 
   useEffect(() => {
     if (isReady) {
-      const socket = new Socket('ws://localhost:4000/socket')
+      const socket = new Socket('wss://kumpel-back.fly.dev/socket')
       socket.connect()
 
       const chatChannel = socket.channel(`chat_room:${chatId}`, { code: code })
