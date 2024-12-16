@@ -42,11 +42,15 @@ export default function ChatRoom() {
   // Check if userName, chatId, and code are available
   const isReady = user && chatId && code
 
+  // Request permission for notifications
   useEffect(() => {
-    const colors = Object.values(UserColor) // Get an array of enum values
-    const randomIndex = Math.floor(Math.random() * colors.length) // Generate a random index
-
-    setUserColor(colors[randomIndex])
+    if ('Notification' in window) {
+      Notification.requestPermission().then((permission) => {
+        if (permission !== 'granted') {
+          console.log('Notification permission denied')
+        }
+      })
+    }
   }, [])
 
   useEffect(() => {
@@ -70,6 +74,14 @@ export default function ChatRoom() {
 
       chatChannel.on('new_message', (payload) => {
         setMessages((prev) => [payload, ...prev])
+
+        // Trigger a notification when a new message is received
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('New Message', {
+            body: payload.body,
+            icon: '/favicon.ico' // Optional: Add an icon
+          })
+        }
       })
 
       chatChannel
