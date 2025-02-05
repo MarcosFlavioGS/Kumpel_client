@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import useStore from '../store'
-import styles from '../styles/chatRoom'
+import useStore from '@/app/store'
+import styles from '@/app/styles/chatRoom'
 
 export default function LandingPage() {
   const [username, setUsername] = useState('')
