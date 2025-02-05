@@ -4,7 +4,7 @@
 
 @font-face {
   font-family: 'Meslo Nerd Font';
-  src: url('@/app/fonts/MesloLGSNerdFont-Regular.ttf') format('trueType');
+  src: url('./fonts/MesloLGSNerdFont-Regular.ttf') format('trueType');
   font-weight: normal;
   font-style: normal;
 }
