@@ -1,4 +1,5 @@
 'use client'
+
 import { useState, useEffect } from 'react'
 import useStore from '@/app/store'
 import styles from '@/app/styles/landing.module.css'
