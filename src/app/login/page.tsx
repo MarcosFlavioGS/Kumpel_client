@@ -7,8 +7,7 @@ import Link from 'next/link'
 import useStore from '@/app/store'
 import { useRouter } from 'next/navigation'
 
-export default function Home() {
-  const [name, setName] = useState('')
+export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -20,25 +19,25 @@ export default function Home() {
     setError(null)
 
     try {
-      const response = await fetch('http://localhost:4000/api/users', {
+      const response = await fetch('http://localhost:4000/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name, mail: email, password }),
+        body: JSON.stringify({ mail: email, password }),
       })
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.message || 'Failed to create account')
+        throw new Error(errorData.message || 'Failed to log in')
       }
 
       const data = await response.json()
       setToken(data.token)
       router.push('/dashboard')
     } catch (error) {
-      console.error('Error creating account:', error)
-      setError(error instanceof Error ? error.message : 'Failed to create account')
+      console.error('Error logging in:', error)
+      setError(error instanceof Error ? error.message : 'Failed to log in')
     }
   }
 
@@ -46,26 +45,12 @@ export default function Home() {
     <div className='min-h-screen bg-[#36393f] flex flex-col items-center justify-center p-4'>
       <div className='w-full max-w-md space-y-8 bg-[#2f3136] p-8 rounded-lg border border-[#202225]'>
         <div className='text-center'>
-          <h1 className='text-2xl font-bold text-white'>Welcome to Kumpel</h1>
-          <p className='mt-2 text-gray-400'>Create an account to get started</p>
+          <h1 className='text-2xl font-bold text-white'>Welcome Back</h1>
+          <p className='mt-2 text-gray-400'>Log in to your account</p>
         </div>
 
         <form onSubmit={handleSubmit} className='mt-8 space-y-6'>
           <div className='space-y-4'>
-            <div>
-              <label htmlFor='name' className='block text-sm font-medium text-gray-300'>
-                Name
-              </label>
-              <Input
-                id='name'
-                type='text'
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className='mt-1 bg-[#40444b] border-[#202225] text-white placeholder:text-gray-400 focus:border-indigo-500'
-              />
-            </div>
-
             <div>
               <label htmlFor='email' className='block text-sm font-medium text-gray-300'>
                 Email
@@ -100,19 +85,19 @@ export default function Home() {
           <Button
             type='submit'
             className='w-full bg-indigo-600 hover:bg-indigo-700 text-white'>
-            Create Account
+            Log In
           </Button>
         </form>
 
         <div className='text-center'>
           <p className='text-sm text-gray-400'>
-            Already have an account?{' '}
-            <Link href='/login' className='text-indigo-400 hover:text-indigo-300'>
-              Log in
+            Don't have an account?{' '}
+            <Link href='/' className='text-indigo-400 hover:text-indigo-300'>
+              Sign up
             </Link>
           </p>
         </div>
       </div>
     </div>
   )
-}
+} 

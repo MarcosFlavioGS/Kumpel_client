@@ -1,22 +1,27 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { Socket, Channel } from 'phoenix'
 import useStore from '@/app/store'
-import LandingPage from '../components/landingPage'
-import { Input } from '@/components/ui/input' // Shadcn Input component
-import { Button } from '@/components/ui/button' // Shadcn Button component
-import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card' // Shadcn Card components
-import { ScrollArea } from '@/components/ui/scroll-area' // Shadcn ScrollArea component
-
-import { Avatar, AvatarFallback } from '@/components/ui/avatar' // Shadcn Avatar component
-import { Badge } from '@/components/ui/badge' // Shadcn Badge component
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { useChannel } from '@/app/hooks/useChannel'
 
 interface Message {
   body: string
   user: string
   code: string
   color: string
+  timestamp: string
+}
+
+interface ChatRoomProps {
+  room: {
+    id: string
+    name: string
+    code: string
+  }
 }
 
 enum UserColor {
@@ -30,174 +35,133 @@ enum UserColor {
   Pink = '#FF33A6'
 }
 
-export default function ChatRoom() {
-  const [messages, setMessages] = useState<Message[]>([])
+export default function ChatRoom({ room }: ChatRoomProps) {
   const [input, setInput] = useState('')
-  const [channel, setChannel] = useState<Channel | null>(null)
-  const [connectionError, setConnectionError] = useState<string>('')
-  const [pingResponse, setPingResponse] = useState('')
   const [userColor, setUserColor] = useState('')
+  const [messages, setMessages] = useState<Message[]>([])
 
   const user = useStore((state) => state.userName)
-  const chatId = useStore((state) => state.chatId)
-  const code = useStore((state) => state.code)
+  const token = useStore((state) => state.token)
 
   const messagesContainerRef = useRef<HTMLDivElement>(null)
-  const isReady = user && chatId && code
 
-  // Request notification permission
+  const { messages: channelMessages, sendMessage } = useChannel(`chat_room:${room.code}`)
+
   useEffect(() => {
+    if (!user || !token || !room?.code) return
+
+    // Request notification permission
     if ('Notification' in window) {
-      Notification.requestPermission().then((permission) => {
-        if (permission !== 'granted') {
-          console.log('Notification permission denied')
-        }
-      })
+      Notification.requestPermission()
     }
-  }, [])
 
-  // Set a random user color
-  useEffect(() => {
+    // Set user color
     const colors = Object.values(UserColor)
-    const randomIndex = Math.floor(Math.random() * colors.length)
-    setUserColor(colors[randomIndex])
-  }, [])
+    const randomColor = colors[Math.floor(Math.random() * colors.length)]
+    setUserColor(randomColor)
+  }, [user, token, room?.code])
 
-  // Connect to the WebSocket and join the channel
   useEffect(() => {
-    if (isReady) {
-      const socket = new Socket('wss://kumpel-back.fly.dev/socket')
-      socket.connect()
+    if (channelMessages.length > 0) {
+      const lastMessage = channelMessages[channelMessages.length - 1]
+      if (lastMessage.event === 'new_message') {
+        setMessages((prev) => [...prev, { ...lastMessage.payload, timestamp: new Date().toISOString() }])
 
-      const chatChannel = socket.channel(`chat_room:${chatId}`, { code: code })
-      setChannel(chatChannel)
-
-      chatChannel
-        .join()
-        .receive('ok', (resp) => {
-          console.log('Joined successfully', resp)
-          setConnectionError('')
-        })
-        .receive('error', (resp) => {
-          console.log('Unable to join', resp)
-          setConnectionError(resp.reason || 'An unknown error occurred')
-        })
-
-      chatChannel.on('new_message', (payload) => {
-        setMessages((prev) => [payload, ...prev])
-
-        if ('Notification' in window && Notification.permission === 'granted') {
+        // Show notification if not focused
+        if (document.hidden && Notification.permission === 'granted') {
           new Notification('New Message', {
-            body: payload.body,
-            icon: '/favicon.ico'
+            body: `${lastMessage.payload.user}: ${lastMessage.payload.body}`
           })
         }
-      })
-
-      chatChannel
-        .push('ping', { id: chatId })
-        .receive('ok', (resp) => {
-          console.log('PING: ', resp)
-          setPingResponse(resp)
-        })
-        .receive('error', (resp) => {
-          console.log('Error on ping: ', resp)
-        })
-
-      return () => {
-        chatChannel.leave()
-        socket.disconnect()
       }
     }
-  }, [isReady])
+  }, [channelMessages])
 
-  // Scroll to the bottom when new messages are added
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!input.trim() || !room?.code) return
+
+    sendMessage('new_message', {
+      body: input,
+      user,
+      code: room.code,
+      color: userColor
+    })
+
+    setInput('')
+  }
+
   useEffect(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
     }
   }, [messages])
 
-  const sendMessage = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (input.trim() && channel) {
-      channel.push('new_message', { body: input, user: user, color: userColor })
-      setInput('')
-    }
+  if (!room) {
+    return <div className='h-full flex items-center justify-center text-gray-500'>No room selected</div>
   }
 
-  if (connectionError) {
-    return <div className='text-red-500 p-4'>{connectionError}</div>
-  }
-
-  return !isReady ? (
-    <LandingPage />
-  ) : (
-    <div className='flex justify-center items-center h-screen bg-slate-900 '>
-      <Card className='w-full max-w-2xl border-none rounded'>
-        <CardHeader className='bg-slate-800 p-4 border-b'>
-          <div className='flex items-center space-x-2'>
-            <Avatar>
-              <AvatarFallback>{user[0]}</AvatarFallback>
-            </Avatar>
-            <div>
-              <h1
-                className='text-lg font-semibold'
-                style={{ color: userColor }}>
-                {user}
-              </h1>
-              <Badge
-                variant='outline'
-                className='text-sm text-slate-400'>
-                {pingResponse}
-              </Badge>
-            </div>
+  return (
+    <div className='flex flex-col h-full bg-[#36393f]'>
+      {/* Room Header */}
+      <div className='border-b border-[#202225] bg-[#36393f] p-4'>
+        <div className='flex items-center gap-3'>
+          <Avatar className='bg-indigo-600'>
+            <AvatarFallback className='text-white'>{room.name[0]}</AvatarFallback>
+          </Avatar>
+          <div>
+            <h2 className='font-semibold text-white'>{room.name}</h2>
+            <p className='text-sm text-gray-400'>Code: {room.code}</p>
           </div>
-        </CardHeader>
+        </div>
+      </div>
 
-        <CardContent className='p-4 bg-slate-800'>
-          <ScrollArea
-            ref={messagesContainerRef}
-            className='h-96 bg-slate-700 rounded'>
-            {messages.map((msg, index) => (
-              <div
-                key={index}
-                className='flex items-start space-x-2 mb-4'>
-                <Avatar>
-                  <AvatarFallback style={{ backgroundColor: msg.color }}>{msg.user[0]}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <p
-                    className='text-sm font-medium'
-                    style={{ color: msg.color }}>
-                    {msg.user}
-                  </p>
-                  <p className='text-sm text-slate-300'>{msg.body}</p>
+      {/* Messages Area */}
+      <ScrollArea className='flex-1 p-4'>
+        <div className='space-y-4'>
+          {messages.map((message, index) => (
+            <div
+              key={index}
+              className='flex gap-3'>
+              <Avatar className='bg-indigo-600'>
+                <AvatarFallback className='text-white'>{message.user[0]}</AvatarFallback>
+              </Avatar>
+              <div className='flex-1'>
+                <div className='flex items-baseline gap-2'>
+                  <span className='font-medium text-white'>{message.user}</span>
+                  <span className='text-xs text-gray-400'>
+                    {new Date(message.timestamp).toLocaleTimeString()}
+                  </span>
                 </div>
+                <p
+                  className='text-gray-300'
+                  style={{ color: message.color }}>
+                  {message.body}
+                </p>
               </div>
-            ))}
-          </ScrollArea>
-        </CardContent>
+            </div>
+          ))}
+        </div>
+      </ScrollArea>
 
-        <CardFooter className='bg-slate-800 p-4 border-t'>
-          <form
-            onSubmit={sendMessage}
-            className='flex w-full space-x-2'>
-            <Input
-              type='text'
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder='Type a message'
-              className='flex-1 text-slate-300'
-            />
-            <Button
-              type='submit'
-              className='hover:bg-indigo-900 bg-slate-950'>
-              Send
-            </Button>
-          </form>
-        </CardFooter>
-      </Card>
+      {/* Message Input */}
+      <div className='border-t border-[#202225] bg-[#40444b] p-4'>
+        <form
+          onSubmit={handleSendMessage}
+          className='flex gap-2'>
+          <Input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder='Type a message...'
+            className='flex-1 bg-[#40444b] border-[#202225] text-white placeholder:text-gray-400 focus:border-indigo-500'
+          />
+          <Button
+            type='submit'
+            className='bg-indigo-600 hover:bg-indigo-700 text-white'>
+            Send
+          </Button>
+        </form>
+      </div>
     </div>
   )
 }

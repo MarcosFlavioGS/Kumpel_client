@@ -1,35 +1,29 @@
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
 
-interface ChatState {
+interface UserState {
   userName: string
-  chatId: string
-  code: string
   token: string
   email: string
   setUserName: (userName: string) => void
-  setChatId: (chatId: string) => void
-  setCode: (code: string) => void
   setToken: (token: string) => void
-  setEmail: (emal: string) => void
+  setEmail: (email: string) => void
+  clearAuth: () => void
 }
 
-const useStore = create<ChatState>()(
+const useStore = create<UserState>()(
   devtools(
     persist(
       (set) => ({
         userName: '',
-        chatId: '',
-        code: '',
         token: '',
         email: '',
-        setUserName: (userName) => set(() => ({ userName: userName })),
-        setChatId: (chatId) => set(() => ({ chatId: chatId })),
-        setCode: (code) => set(() => ({ code: code })),
-        setToken: (token) => set(() => ({ token: token })),
-        setEmail: (email) => set(() => ({ email: email }))
+        setUserName: (userName) => set(() => ({ userName })),
+        setToken: (token) => set(() => ({ token })),
+        setEmail: (email) => set(() => ({ email })),
+        clearAuth: () => set(() => ({ userName: '', token: '', email: '' }))
       }),
-      { name: 'chatStore' }
+      { name: 'userStore' }
     )
   )
 )
