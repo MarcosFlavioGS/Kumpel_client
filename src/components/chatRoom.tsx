@@ -45,7 +45,7 @@ export default function ChatRoom({ room }: ChatRoomProps) {
 
   const messagesContainerRef = useRef<HTMLDivElement>(null)
 
-  const { messages: channelMessages, sendMessage } = useChannel(`chat_room:${room.code}`)
+  const { messages: channelMessages, sendMessage } = useChannel(`chat_room:${room.id}`, { code: room.code })
 
   useEffect(() => {
     if (!user || !token || !room?.code) return
@@ -65,7 +65,10 @@ export default function ChatRoom({ room }: ChatRoomProps) {
     if (channelMessages.length > 0) {
       const lastMessage = channelMessages[channelMessages.length - 1]
       if (lastMessage.event === 'new_message') {
-        setMessages((prev) => [...prev, { ...lastMessage.payload, timestamp: new Date().toISOString() }])
+        setMessages((messages) => [
+          ...messages,
+          { ...lastMessage.payload, user: user, code: room.code, timestamp: new Date().toISOString() }
+        ])
 
         // Show notification if not focused
         if (document.hidden && Notification.permission === 'granted') {
@@ -83,7 +86,7 @@ export default function ChatRoom({ room }: ChatRoomProps) {
 
     sendMessage('new_message', {
       body: input,
-      user,
+      user: user,
       code: room.code,
       color: userColor
     })
@@ -128,16 +131,16 @@ export default function ChatRoom({ room }: ChatRoomProps) {
               </Avatar>
               <div className='flex-1'>
                 <div className='flex items-baseline gap-2'>
-                  <span className='font-medium text-white'>{message.user}</span>
+                  <span
+                    className='font-medium text-white'
+                    style={{ color: message.color }}>
+                    {message.user}
+                  </span>
                   <span className='text-xs text-gray-400'>
                     {new Date(message.timestamp).toLocaleTimeString()}
                   </span>
                 </div>
-                <p
-                  className='text-gray-300'
-                  style={{ color: message.color }}>
-                  {message.body}
-                </p>
+                <p className='text-gray-300'>{message.body}</p>
               </div>
             </div>
           ))}

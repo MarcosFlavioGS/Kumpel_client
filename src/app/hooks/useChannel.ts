@@ -4,7 +4,7 @@ import { Socket, Channel } from 'phoenix'
 interface Message {
   body: string
   user: string
-  code: string
+  code?: string
   color: string
 }
 
@@ -13,21 +13,47 @@ interface ChannelMessage {
   payload: Message
 }
 
-export function useChannel(channelName: string) {
-  const [socket] = useState(() => new Socket('ws://localhost:4000/socket'))
+interface ChannelOptions {
+  code?: string
+  token?: string
+}
+
+export function useChannel(channelName: string, options: ChannelOptions = {}) {
+  const [socket] = useState(
+    () =>
+      new Socket('ws://localhost:4000/socket', {
+        params: { token: options.token }
+      })
+  )
   const [channel, setChannel] = useState<Channel | null>(null)
   const [messages, setMessages] = useState<ChannelMessage[]>([])
+  const [connectionStatus, setConnectionStatus] = useState<
+    'disconnected' | 'connecting' | 'connected' | 'error'
+  >('disconnected')
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     socket.connect()
 
-    const newChannel = socket.channel(channelName, {})
+    // Create the join payload with the code if provided
+    const joinPayload = options.code ? { code: options.code } : {}
+
+    const newChannel = socket.channel(channelName, joinPayload)
     setChannel(newChannel)
+    setConnectionStatus('connecting')
 
     newChannel
       .join()
-      .receive('ok', (resp) => console.log('Joined successfully', resp))
-      .receive('error', (resp) => console.log('Unable to join', resp))
+      .receive('ok', (resp) => {
+        console.log('Joined successfully', resp)
+        setConnectionStatus('connected')
+        setError(null)
+      })
+      .receive('error', (resp) => {
+        console.log('Unable to join', resp)
+        setConnectionStatus('error')
+        setError(resp.reason || 'Failed to join channel')
+      })
 
     newChannel.onMessage = (event, payload) => {
       setMessages((prev) => [...prev, { event, payload }])
@@ -36,8 +62,21 @@ export function useChannel(channelName: string) {
 
     return () => {
       newChannel.leave()
+      setConnectionStatus('disconnected')
     }
-  }, [channelName, socket])
+  }, [channelName, options.code, socket])
 
-  return { messages, sendMessage: (event: string, payload: Message) => channel?.push(event, payload) }
+  const sendMessage = (event: string, payload: Message) => {
+    if (channel && connectionStatus === 'connected') {
+      return channel.push(event, payload)
+    }
+    return false
+  }
+
+  return {
+    messages,
+    sendMessage,
+    connectionStatus,
+    error
+  }
 }

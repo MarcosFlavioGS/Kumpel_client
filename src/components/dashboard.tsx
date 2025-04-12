@@ -38,6 +38,7 @@ export default function Dashboard() {
   const router = useRouter()
   const token = useStore((state) => state.token)
   const clearAuth = useStore((state) => state.clearAuth)
+  const setUserName = useStore((state) => state.setUserName)
 
   useEffect(() => {
     if (!token) {
@@ -100,6 +101,7 @@ export default function Dashboard() {
         }))
 
         setRooms(allRooms)
+        setUserName(userData.name)
       } catch (parseError) {
         console.error('JSON Parse Error:', parseError)
         throw new Error('Failed to parse server response as JSON')
