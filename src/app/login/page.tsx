@@ -22,9 +22,9 @@ export default function Login() {
       const response = await fetch('http://localhost:4000/api/auth/login', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ mail: email, password }),
+        body: JSON.stringify({ mail: email, password })
       })
 
       if (!response.ok) {
@@ -49,10 +49,14 @@ export default function Login() {
           <p className='mt-2 text-gray-400'>Log in to your account</p>
         </div>
 
-        <form onSubmit={handleSubmit} className='mt-8 space-y-6'>
+        <form
+          onSubmit={handleSubmit}
+          className='mt-8 space-y-6'>
           <div className='space-y-4'>
             <div>
-              <label htmlFor='email' className='block text-sm font-medium text-gray-300'>
+              <label
+                htmlFor='email'
+                className='block text-sm font-medium text-gray-300'>
                 Email
               </label>
               <Input
@@ -66,7 +70,9 @@ export default function Login() {
             </div>
 
             <div>
-              <label htmlFor='password' className='block text-sm font-medium text-gray-300'>
+              <label
+                htmlFor='password'
+                className='block text-sm font-medium text-gray-300'>
                 Password
               </label>
               <Input
@@ -91,8 +97,10 @@ export default function Login() {
 
         <div className='text-center'>
           <p className='text-sm text-gray-400'>
-            Don't have an account?{' '}
-            <Link href='/' className='text-indigo-400 hover:text-indigo-300'>
+            {"Don't have an account?"}{' '}
+            <Link
+              href='/'
+              className='text-indigo-400 hover:text-indigo-300'>
               Sign up
             </Link>
           </p>
@@ -100,4 +108,4 @@ export default function Login() {
       </div>
     </div>
   )
-} 
+}

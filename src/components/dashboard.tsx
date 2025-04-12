@@ -79,7 +79,6 @@ export default function Dashboard() {
 
       // Get the raw response text first
       const responseText = await response.text()
-      console.log('Raw response:', responseText)
 
       try {
         const userData: UserData = JSON.parse(responseText)

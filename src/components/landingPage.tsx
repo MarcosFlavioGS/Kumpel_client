@@ -46,54 +46,64 @@ export default function LandingPage() {
         setErrorMessage('Invalid email or password')
       }
     } catch (error) {
-      setErrorMessage('Connection error. Please try again.')
+      setErrorMessage(`Connection error: ${error}. Please try again.`)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md">
+    <div className='min-h-screen flex items-center justify-center bg-gray-50'>
+      <Card className='w-full max-w-md'>
         <CardHeader>
-          <h1 className="text-2xl font-bold text-center">Welcome to Kumpel</h1>
-          <p className="text-center text-gray-500">Sign in to continue</p>
+          <h1 className='text-2xl font-bold text-center'>Welcome to Kumpel</h1>
+          <p className='text-center text-gray-500'>Sign in to continue</p>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
+          <form
+            onSubmit={handleLogin}
+            className='space-y-4'>
+            <div className='space-y-2'>
+              <label
+                htmlFor='email'
+                className='text-sm font-medium'>
                 Email
               </label>
               <Input
-                id="email"
-                type="email"
+                id='email'
+                type='email'
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
+                placeholder='Enter your email'
                 required
               />
             </div>
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">
+            <div className='space-y-2'>
+              <label
+                htmlFor='password'
+                className='text-sm font-medium'>
                 Password
               </label>
               <Input
-                id="password"
-                type="password"
+                id='password'
+                type='password'
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
+                placeholder='Enter your password'
                 required
               />
             </div>
             {errorMessage && (
-              <Badge variant="destructive" className="w-full">
+              <Badge
+                variant='destructive'
+                className='w-full'>
                 {errorMessage}
               </Badge>
             )}
           </form>
         </CardContent>
         <CardFooter>
-          <Button onClick={handleLogin} className="w-full">
+          <Button
+            onClick={handleLogin}
+            className='w-full'>
             Sign In
           </Button>
         </CardFooter>
