@@ -9,6 +9,7 @@ import useStore from '@/app/store'
 import { useRouter } from 'next/navigation'
 import ChatRoom from './chatRoom'
 import { LogOut } from 'lucide-react'
+import useChatStore from '@/app/chatStore'
 
 interface Room {
   name: string
@@ -39,6 +40,7 @@ export default function Dashboard() {
   const token = useStore((state) => state.token)
   const clearAuth = useStore((state) => state.clearAuth)
   const setUserName = useStore((state) => state.setUserName)
+  const setMessages = useChatStore((state) => state.setMessages)
 
   useEffect(() => {
     if (!token) {
@@ -158,7 +160,10 @@ export default function Dashboard() {
                 className={`cursor-pointer hover:bg-[#36393f] border-[#202225] ${
                   selectedRoom?.id === room.id ? 'bg-[#36393f]' : 'bg-[#40444b]'
                 }`}
-                onClick={() => setSelectedRoom(room)}>
+                onClick={() => {
+                  setMessages([])
+                  setSelectedRoom(room)
+                }}>
                 <CardContent className='p-3'>
                   <div className='flex items-center gap-3'>
                     <Avatar className='bg-indigo-600'>

@@ -7,14 +7,7 @@ import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useChannel } from '@/app/hooks/useChannel'
-
-interface Message {
-  body: string
-  user: string
-  code: string
-  color: string
-  timestamp: string
-}
+import useChatStore from '@/app/chatStore'
 
 interface ChatRoomProps {
   room: {
@@ -38,7 +31,8 @@ enum UserColor {
 export default function ChatRoom({ room }: ChatRoomProps) {
   const [input, setInput] = useState('')
   const [userColor, setUserColor] = useState('')
-  const [messages, setMessages] = useState<Message[]>([])
+  const messages = useChatStore((state) => state.messages)
+  const setMessages = useChatStore((state) => state.setMessages)
 
   const user = useStore((state) => state.userName)
   const token = useStore((state) => state.token)
@@ -65,7 +59,7 @@ export default function ChatRoom({ room }: ChatRoomProps) {
     if (channelMessages.length > 0) {
       const lastMessage = channelMessages[channelMessages.length - 1]
       if (lastMessage.event === 'new_message') {
-        setMessages((messages) => [
+        setMessages([
           ...messages,
           { ...lastMessage.payload, user: user, code: room.code, timestamp: new Date().toISOString() }
         ])
