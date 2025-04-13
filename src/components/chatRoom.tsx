@@ -1,13 +1,13 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import useStore from '@/app/store'
+import { useUserStore, useChatStore } from '@/app/stores'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useChannel } from '@/app/hooks/useChannel'
-import useChatStore from '@/app/chatStore'
+import { Message } from '@/type/message/message'
 
 interface ChatRoomProps {
   room: {
@@ -34,8 +34,8 @@ export default function ChatRoom({ room }: ChatRoomProps) {
   const messages = useChatStore((state) => state.messages)
   const setMessages = useChatStore((state) => state.setMessages)
 
-  const user = useStore((state) => state.userName)
-  const token = useStore((state) => state.token)
+  const user = useUserStore((state) => state.userName)
+  const token = useUserStore((state) => state.token)
 
   const messagesContainerRef = useRef<HTMLDivElement>(null)
 

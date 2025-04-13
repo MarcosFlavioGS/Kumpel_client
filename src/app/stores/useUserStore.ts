@@ -11,7 +11,7 @@ interface UserState {
   clearAuth: () => void
 }
 
-const useStore = create<UserState>()(
+const useUserStore = create<UserState>()(
   devtools(
     persist(
       (set) => ({
@@ -28,4 +28,4 @@ const useStore = create<UserState>()(
   )
 )
 
-export default useStore
+export default useUserStore 

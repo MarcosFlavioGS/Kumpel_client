@@ -1,18 +1,18 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import useStore from '@/app/store'
 import { useRouter } from 'next/navigation'
+import { useUserStore } from '@/app/stores'
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-  const setToken = useStore((state) => state.setToken)
+  const setToken = useUserStore((state) => state.setToken)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

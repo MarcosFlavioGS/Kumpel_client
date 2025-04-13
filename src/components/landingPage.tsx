@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import useStore from '@/app/store'
 import { useRouter } from 'next/navigation'
+import { useUserStore } from '@/app/stores'
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -13,10 +13,10 @@ export default function LandingPage() {
   const [password, setPassword] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const router = useRouter()
-  const token = useStore((state) => state.token)
-  const setUserToken = useStore((state) => state.setToken)
-  const setUserEmail = useStore((state) => state.setEmail)
-  const setUserName = useStore((state) => state.setUserName)
+  const token = useUserStore((state) => state.token)
+  const setUserToken = useUserStore((state) => state.setToken)
+  const setUserEmail = useUserStore((state) => state.setEmail)
+  const setUserName = useUserStore((state) => state.setUserName)
 
   useEffect(() => {
     // If user is already authenticated, redirect to dashboard

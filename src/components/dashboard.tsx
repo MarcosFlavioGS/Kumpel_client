@@ -5,11 +5,10 @@ import { Card, CardContent } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import useStore from '@/app/store'
+import { useUserStore, useChatStore } from '@/app/stores'
 import { useRouter } from 'next/navigation'
 import ChatRoom from './chatRoom'
 import { LogOut } from 'lucide-react'
-import useChatStore from '@/app/chatStore'
 
 interface Room {
   name: string
@@ -37,9 +36,9 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-  const token = useStore((state) => state.token)
-  const clearAuth = useStore((state) => state.clearAuth)
-  const setUserName = useStore((state) => state.setUserName)
+  const token = useUserStore((state) => state.token)
+  const clearAuth = useUserStore((state) => state.clearAuth)
+  const setUserName = useUserStore((state) => state.setUserName)
   const setMessages = useChatStore((state) => state.setMessages)
 
   useEffect(() => {
