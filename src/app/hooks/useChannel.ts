@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Socket, Channel } from 'phoenix'
-import { Message } from '@/type/message/message'
+
+interface Message {
+  body: string
+  user: string
+  code?: string
+  color: string
+}
 
 interface ChannelMessage {
   event: string
