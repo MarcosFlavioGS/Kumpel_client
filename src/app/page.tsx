@@ -1,12 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useUserStore } from '@/app/stores'
-import LandingPage from '@/components/landingPage'
 
 export default function Home() {
   const [name, setName] = useState('')
@@ -24,9 +23,9 @@ export default function Home() {
       const response = await fetch('http://localhost:4000/api/users', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ name, mail: email, password }),
+        body: JSON.stringify({ name, mail: email, password })
       })
 
       if (!response.ok) {
@@ -51,10 +50,14 @@ export default function Home() {
           <p className='mt-2 text-gray-400'>Create an account to get started</p>
         </div>
 
-        <form onSubmit={handleSubmit} className='mt-8 space-y-6'>
+        <form
+          onSubmit={handleSubmit}
+          className='mt-8 space-y-6'>
           <div className='space-y-4'>
             <div>
-              <label htmlFor='name' className='block text-sm font-medium text-gray-300'>
+              <label
+                htmlFor='name'
+                className='block text-sm font-medium text-gray-300'>
                 Name
               </label>
               <Input
@@ -68,7 +71,9 @@ export default function Home() {
             </div>
 
             <div>
-              <label htmlFor='email' className='block text-sm font-medium text-gray-300'>
+              <label
+                htmlFor='email'
+                className='block text-sm font-medium text-gray-300'>
                 Email
               </label>
               <Input
@@ -82,7 +87,9 @@ export default function Home() {
             </div>
 
             <div>
-              <label htmlFor='password' className='block text-sm font-medium text-gray-300'>
+              <label
+                htmlFor='password'
+                className='block text-sm font-medium text-gray-300'>
                 Password
               </label>
               <Input
@@ -108,7 +115,9 @@ export default function Home() {
         <div className='text-center'>
           <p className='text-sm text-gray-400'>
             Already have an account?{' '}
-            <Link href='/login' className='text-indigo-400 hover:text-indigo-300'>
+            <Link
+              href='/login'
+              className='text-indigo-400 hover:text-indigo-300'>
               Log in
             </Link>
           </p>

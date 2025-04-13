@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useChannel } from '@/app/hooks/useChannel'
-import { Message } from '@/type/message/message'
 
 interface ChatRoomProps {
   room: {
