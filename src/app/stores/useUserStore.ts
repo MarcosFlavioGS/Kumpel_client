@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { devtools, persist } from 'zustand/middleware'
+import { devtools, persist, createJSONStorage } from 'zustand/middleware'
 
 interface UserState {
   userName: string
@@ -23,7 +23,15 @@ const useUserStore = create<UserState>()(
         setEmail: (email) => set(() => ({ email })),
         clearAuth: () => set(() => ({ userName: '', token: '', email: '' }))
       }),
-      { name: 'userStore' }
+      {
+        name: 'userStore',
+        storage: createJSONStorage(() => localStorage),
+        partialize: (state) => ({
+          token: state.token,
+          userName: state.userName,
+          email: state.email
+        })
+      }
     )
   )
 )
