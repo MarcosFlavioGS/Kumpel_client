@@ -6,21 +6,15 @@ import { StoreHydration } from '@/components/storeHydration'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Kumpel App',
-  description: 'A group chat application',
+  title: 'Kumpel',
+  description: 'A group chat application'
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang='en'>
       <body className={inter.className}>
-        <StoreHydration>
-          {children}
-        </StoreHydration>
+        <StoreHydration>{children}</StoreHydration>
       </body>
     </html>
   )
