@@ -59,7 +59,7 @@ export default function Dashboard() {
       setIsLoading(true)
       setError(null)
 
-      const response = await fetch(`http://localhost:4000/api/currentUser`, {
+      const response = await fetch(`https://kumpel-back.fly.dev/api/currentUser`, {
         headers: {
           Authorization: `Bearer ${token}`
         }

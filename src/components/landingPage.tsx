@@ -28,7 +28,7 @@ export default function LandingPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const response = await fetch('http://localhost:4000/api/auth/login', {
+      const response = await fetch('https://kumpel-back.fly.dev/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

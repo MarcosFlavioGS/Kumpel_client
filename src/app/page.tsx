@@ -20,7 +20,7 @@ export default function Home() {
     setError(null)
 
     try {
-      const response = await fetch('http://localhost:4000/api/users', {
+      const response = await fetch('https://kumpel-back.fly.dev/api/users', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
