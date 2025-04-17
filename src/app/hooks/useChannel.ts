@@ -21,7 +21,7 @@ interface ChannelOptions {
 export function useChannel(channelName: string, options: ChannelOptions = {}) {
   const [socket] = useState(
     () =>
-      new Socket('ws://kumpel-back.fly.dev/socket', {
+      new Socket('wss://kumpel-back.fly.dev/socket', {
         params: { token: options.token }
       })
   )
