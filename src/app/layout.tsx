@@ -7,7 +7,16 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Kumpel',
-  description: 'A group chat application'
+  description: 'A group chat application',
+  icons: {
+    icon: '/logo.svg',
+    shortcut: '/logo.svg',
+    apple: '/logo.svg',
+    other: {
+      rel: 'apple-touch-icon-precomposed',
+      url: '/logo.svg'
+    }
+  }
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
