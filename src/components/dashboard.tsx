@@ -59,7 +59,7 @@ export default function Dashboard() {
       setIsLoading(true)
       setError(null)
 
-      const response = await fetch(`http://localhost:4000/api/users/1`, {
+      const response = await fetch(`http://localhost:4000/api/currentUser`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
