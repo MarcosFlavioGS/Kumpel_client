@@ -30,7 +30,7 @@ export default function Home() {
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.message || 'Failed to create account. Check password')
+        throw new Error(errorData.message || 'Failed to create account')
       }
 
       const data = await response.json()
