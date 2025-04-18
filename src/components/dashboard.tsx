@@ -9,6 +9,7 @@ import { useUserStore, useChatStore } from '@/app/stores'
 import { useRouter } from 'next/navigation'
 import ChatRoom from './chatRoom'
 import { LogOut } from 'lucide-react'
+import { SubscribeRoomDialog } from './subscribeRoomDialog'
 
 interface Room {
   name: string
@@ -94,12 +95,24 @@ export default function Dashboard() {
         const createdRooms = Array.isArray(userData.created_rooms) ? userData.created_rooms : []
         const subscribedRooms = Array.isArray(userData.subscribed_rooms) ? userData.subscribed_rooms : []
 
-        // Combine created and subscribed rooms
-        const allRooms = [...createdRooms, ...subscribedRooms].map((room) => ({
-          id: room.room_id.toString(),
-          name: room.name,
-          code: room.code
-        }))
+        // Use a Set to track unique room IDs
+        const uniqueRoomIds = new Set<string>()
+
+        // Combine created and subscribed rooms, ensuring uniqueness
+        const allRooms = [...createdRooms, ...subscribedRooms]
+          .filter(room => {
+            const roomId = room.room_id.toString()
+            if (uniqueRoomIds.has(roomId)) {
+              return false
+            }
+            uniqueRoomIds.add(roomId)
+            return true
+          })
+          .map((room) => ({
+            id: room.room_id.toString(),
+            name: room.name,
+            code: room.code
+          }))
 
         setRooms(allRooms)
         setUserName(userData.name)
@@ -178,6 +191,10 @@ export default function Dashboard() {
             ))}
           </div>
         </ScrollArea>
+
+        <div className='mt-4 pt-4 border-t border-[#202225]'>
+          <SubscribeRoomDialog />
+        </div>
       </div>
 
       {/* Main Chat Area */}
