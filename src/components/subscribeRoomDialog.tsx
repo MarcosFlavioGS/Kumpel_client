@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useUserStore } from '@/app/stores'
 import { useRouter } from 'next/navigation'
+import { API_URL } from '@/config'
 
 export function SubscribeRoomDialog() {
   const [roomId, setRoomId] = useState('')
@@ -35,7 +36,7 @@ export function SubscribeRoomDialog() {
       setIsLoading(true)
       setError(null)
 
-      const response = await fetch('https://kumpel-back.fly.dev/api/rooms/subscribe', {
+      const response = await fetch(`${API_URL}/api/rooms/subscribe`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

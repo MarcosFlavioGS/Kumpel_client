@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation'
 import ChatRoom from './chatRoom'
 import { LogOut } from 'lucide-react'
 import { SubscribeRoomDialog } from './subscribeRoomDialog'
+import { API_URL } from '@/config'
 
 interface Room {
   name: string
@@ -60,7 +61,7 @@ export default function Dashboard() {
       setIsLoading(true)
       setError(null)
 
-      const response = await fetch(`https://kumpel-back.fly.dev/api/currentUser`, {
+      const response = await fetch(`${API_URL}/api/currentUser`, {
         headers: {
           Authorization: `Bearer ${token}`
         }

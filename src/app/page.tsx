@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useUserStore } from '@/app/stores'
+import { API_URL } from '@/config'
 
 export default function Home() {
   const [name, setName] = useState('')
@@ -20,7 +21,7 @@ export default function Home() {
     setError(null)
 
     try {
-      const response = await fetch('https://kumpel-back.fly.dev/api/users', {
+      const response = await fetch(`${API_URL}/api/users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
