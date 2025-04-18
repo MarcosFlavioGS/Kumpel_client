@@ -60,11 +60,7 @@ export default function ChatRoom({ room }: ChatRoomProps) {
       if (lastMessage.event === 'new_message') {
         setMessages([
           ...messages,
-          { 
-            ...lastMessage.payload, 
-            code: room.code, 
-            timestamp: new Date().toISOString() 
-          }
+          { ...lastMessage.payload, code: room.code, timestamp: new Date().toISOString() }
         ])
 
         // Show notification if not focused
