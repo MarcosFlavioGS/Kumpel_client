@@ -37,7 +37,7 @@ A modern, real-time chat application built with Next.js and Phoenix WebSocket.
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/kumpel_app.git
+   git clone https://github.com/MarcosFlavioGS/Kumpel_client.git
    cd kumpel_app
    ```
 
