@@ -4,7 +4,6 @@ import { useEffect, useState, useRef } from 'react'
 import { useUserStore, useChatStore } from '@/app/stores'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useChannel } from '@/app/hooks/useChannel'
 
@@ -30,12 +29,12 @@ enum UserColor {
 export default function ChatRoom({ room }: ChatRoomProps) {
   const [input, setInput] = useState('')
   const [userColor, setUserColor] = useState('')
+  const [isAtBottom, setIsAtBottom] = useState(true)
   const messages = useChatStore((state) => state.messages)
   const setMessages = useChatStore((state) => state.setMessages)
-
   const user = useUserStore((state) => state.userName)
   const token = useUserStore((state) => state.token)
-
+  const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
 
   const { messages: channelMessages, sendMessage } = useChannel(`chat_room:${room.id}`, { code: room.code })
@@ -87,9 +86,29 @@ export default function ChatRoom({ room }: ChatRoomProps) {
     setInput('')
   }
 
-  useEffect(() => {
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  const checkIfAtBottom = () => {
     if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
+      const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current
+      const isBottom = scrollHeight - scrollTop <= clientHeight + 10 // 10px threshold
+      setIsAtBottom(isBottom)
+    }
+  }
+
+  useEffect(() => {
+    const container = messagesContainerRef.current
+    if (container) {
+      container.addEventListener('scroll', checkIfAtBottom)
+      return () => container.removeEventListener('scroll', checkIfAtBottom)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (isAtBottom) {
+      scrollToBottom()
     }
   }, [messages])
 
@@ -113,7 +132,10 @@ export default function ChatRoom({ room }: ChatRoomProps) {
       </div>
 
       {/* Messages Area */}
-      <ScrollArea className='flex-1 p-4'>
+      <div 
+        ref={messagesContainerRef}
+        className='flex-1 overflow-y-auto p-4 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-[#2f3136] [&::-webkit-scrollbar-thumb]:bg-[#40444b] [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-[#36393f]'
+        onScroll={checkIfAtBottom}>
         <div className='space-y-4'>
           {messages.map((message, index) => (
             <div
@@ -137,8 +159,9 @@ export default function ChatRoom({ room }: ChatRoomProps) {
               </div>
             </div>
           ))}
+          <div ref={messagesEndRef} />
         </div>
-      </ScrollArea>
+      </div>
 
       {/* Message Input */}
       <div className='border-t border-[#202225] bg-[#40444b] p-4'>
