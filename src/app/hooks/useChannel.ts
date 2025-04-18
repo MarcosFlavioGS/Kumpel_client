@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Socket, Channel } from 'phoenix'
+import { WS_URL } from '@/config'
 
 interface Message {
   body: string
@@ -21,7 +22,7 @@ interface ChannelOptions {
 export function useChannel(channelName: string, options: ChannelOptions = {}) {
   const [socket] = useState(
     () =>
-      new Socket('wss://kumpel-back.fly.dev/socket', {
+      new Socket(`${WS_URL}/socket`, {
         params: { token: options.token }
       })
   )
