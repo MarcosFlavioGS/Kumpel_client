@@ -8,17 +8,23 @@ import { useRouter } from 'next/navigation'
 import { useUserStore } from '@/app/stores'
 import { API_URL } from '@/config'
 
+interface ValidationError {
+  [key: string]: string[]
+}
+
 export default function Home() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [validationErrors, setValidationErrors] = useState<ValidationError>({})
   const router = useRouter()
   const setToken = useUserStore((state) => state.setToken)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    setValidationErrors({})
 
     try {
       const response = await fetch(`${API_URL}/api/users`, {
@@ -29,18 +35,30 @@ export default function Home() {
         body: JSON.stringify({ name, mail: email, password })
       })
 
+      const data = await response.json()
+
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Failed to create account')
+        if (data.errors) {
+          // Handle validation errors
+          setValidationErrors(data.errors)
+          return
+        }
+        throw new Error(data.message || 'Failed to create account')
       }
 
-      const data = await response.json()
       setToken(data.token)
       router.push('/dashboard')
     } catch (error) {
       console.error('Error creating account:', error)
       setError(error instanceof Error ? error.message : 'Failed to create account')
     }
+  }
+
+  const getErrorMessage = (field: string) => {
+    if (validationErrors[field] && validationErrors[field].length > 0) {
+      return validationErrors[field][0]
+    }
+    return null
   }
 
   return (
@@ -67,8 +85,13 @@ export default function Home() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className='mt-1 bg-[#40444b] border-[#202225] text-white placeholder:text-gray-400 focus:border-indigo-500'
+                className={`mt-1 bg-[#40444b] border-[#202225] text-white placeholder:text-gray-400 focus:border-indigo-500 ${
+                  getErrorMessage('name') ? 'border-red-500' : ''
+                }`}
               />
+              {getErrorMessage('name') && (
+                <p className='mt-1 text-sm text-red-400'>{getErrorMessage('name')}</p>
+              )}
             </div>
 
             <div>
@@ -83,8 +106,13 @@ export default function Home() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className='mt-1 bg-[#40444b] border-[#202225] text-white placeholder:text-gray-400 focus:border-indigo-500'
+                className={`mt-1 bg-[#40444b] border-[#202225] text-white placeholder:text-gray-400 focus:border-indigo-500 ${
+                  getErrorMessage('mail') ? 'border-red-500' : ''
+                }`}
               />
+              {getErrorMessage('mail') && (
+                <p className='mt-1 text-sm text-red-400'>{getErrorMessage('mail')}</p>
+              )}
             </div>
 
             <div>
@@ -99,8 +127,13 @@ export default function Home() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className='mt-1 bg-[#40444b] border-[#202225] text-white placeholder:text-gray-400 focus:border-indigo-500'
+                className={`mt-1 bg-[#40444b] border-[#202225] text-white placeholder:text-gray-400 focus:border-indigo-500 ${
+                  getErrorMessage('password') ? 'border-red-500' : ''
+                }`}
               />
+              {getErrorMessage('password') && (
+                <p className='mt-1 text-sm text-red-400'>{getErrorMessage('password')}</p>
+              )}
             </div>
           </div>
 
