@@ -54,23 +54,21 @@ export default function ChatRoom({ room }: ChatRoomProps) {
   }, [user, token, room?.code])
 
   useEffect(() => {
-    if (channelMessages.length > 0) {
-      const lastMessage = channelMessages[channelMessages.length - 1]
-      if (lastMessage.event === 'new_message') {
-        setMessages([
-          ...messages,
-          { ...lastMessage.payload, code: room.code, timestamp: new Date().toISOString() }
-        ])
+    if (channelMessages.length === 0) return
+    const lastMessage = channelMessages[channelMessages.length - 1]
+    if (lastMessage.event !== 'new_message') return
 
-        // Show notification if not focused
-        if (document.hidden && Notification.permission === 'granted') {
-          new Notification('New Message', {
-            body: `${lastMessage.payload.user}: ${lastMessage.payload.body}`
-          })
-        }
-      }
+    setMessages((prev) => [
+      ...prev,
+      { ...lastMessage.payload, code: room.code, timestamp: new Date().toISOString() }
+    ])
+
+    if (document.hidden && Notification.permission === 'granted') {
+      new Notification('New Message', {
+        body: `${lastMessage.payload.user}: ${lastMessage.payload.body}`
+      })
     }
-  }, [channelMessages])
+  }, [channelMessages, room.code, setMessages])
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault()
@@ -110,6 +108,8 @@ export default function ChatRoom({ room }: ChatRoomProps) {
     if (isAtBottom) {
       scrollToBottom()
     }
+    // Scroll when messages change; isAtBottom is read intentionally without listing it to avoid feedback loops.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- see above
   }, [messages])
 
   if (!room) {

@@ -67,6 +67,10 @@ A modern, real-time chat application built with Next.js and Phoenix WebSocket.
 5. **Open your browser**
    Visit `http://localhost:3000`
 
+## ☁️ Deploying on Vercel
+
+This repo uses **Yarn 4** (see `package.json` → `packageManager` and the Berry-format `yarn.lock`). The included `vercel.json` runs **Corepack** so the install uses Yarn 4 instead of the classic Yarn 1.x that Vercel would otherwise pick, which can break installs. Set `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_WS_URL` in the Vercel project to your production API if needed.
+
 ## 📁 Project Structure
 
 ```

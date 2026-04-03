@@ -4,7 +4,7 @@ import { devtools, persist } from 'zustand/middleware'
 
 interface ChatState {
   messages: Message[]
-  setMessages: (messages: Message[]) => void
+  setMessages: (messages: Message[] | ((prev: Message[]) => Message[])) => void
 }
 
 const useChatStore = create<ChatState>()(
@@ -12,7 +12,10 @@ const useChatStore = create<ChatState>()(
     persist(
       (set) => ({
         messages: [],
-        setMessages: (messages) => set(() => ({ messages }))
+        setMessages: (messages) =>
+          set((state) => ({
+            messages: typeof messages === 'function' ? messages(state.messages) : messages
+          }))
       }),
       { name: 'chatStore' }
     )

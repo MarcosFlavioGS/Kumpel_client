@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
@@ -44,20 +44,12 @@ export default function Dashboard() {
   const setUserName = useUserStore((state) => state.setUserName)
   const setMessages = useChatStore((state) => state.setMessages)
 
-  useEffect(() => {
-    if (!token) {
-      router.push('/')
-      return
-    }
-    fetchUserRooms()
-  }, [token, router])
-
   const handleLogout = () => {
     clearAuth()
     router.push('/')
   }
 
-  const fetchUserRooms = async (options?: { silent?: boolean }) => {
+  const fetchUserRooms = useCallback(async (options?: { silent?: boolean }) => {
     const silent = options?.silent ?? false
     try {
       if (!silent) setIsLoading(true)
@@ -141,7 +133,15 @@ export default function Dashboard() {
     } finally {
       if (!silent) setIsLoading(false)
     }
-  }
+  }, [token, router, clearAuth, setUserName])
+
+  useEffect(() => {
+    if (!token) {
+      router.push('/')
+      return
+    }
+    void fetchUserRooms()
+  }, [token, router, fetchUserRooms])
 
   if (isLoading) {
     return (
