@@ -5,7 +5,7 @@ import { useUserStore, useChatStore } from '@/app/stores'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { useChannel } from '@/hooks/useChannel'
+import { useRoomSocket } from '@/components/roomSocketProvider'
 import { ChevronDown, ChevronLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { kumpelFieldClass } from '@/lib/kumpel-ui'
@@ -43,17 +43,15 @@ export default function ChatRoom({ room, onNavigateBack }: ChatRoomProps) {
   const [input, setInput] = useState('')
   const [userColor, setUserColor] = useState('')
   const [isAtBottom, setIsAtBottom] = useState(true)
-  const messages = useChatStore((state) => state.messages)
-  const setMessages = useChatStore((state) => state.setMessages)
+  const messages = useChatStore((s) => s.messagesByRoomId[room.id])
   const user = useUserStore((state) => state.userName)
   const token = useUserStore((state) => state.token)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
 
-  const { messages: channelMessages, sendMessage, connectionStatus, error: channelError } = useChannel(
-    `chat_room:${room.id}`,
-    { code: room.code, token: token || undefined }
-  )
+  const { sendRoomMessage, getRoomConnection, getRoomError } = useRoomSocket()
+  const connectionStatus = getRoomConnection(room.id)
+  const channelError = getRoomError(room.id)
 
   const connectionLabel = useMemo(() => {
     switch (connectionStatus) {
@@ -78,28 +76,11 @@ export default function ChatRoom({ room, onNavigateBack }: ChatRoomProps) {
     setUserColor(colorForDisplayName(user))
   }, [user, token, room?.code])
 
-  useEffect(() => {
-    if (channelMessages.length === 0) return
-    const lastMessage = channelMessages[channelMessages.length - 1]
-    if (lastMessage.event !== 'new_message') return
-
-    setMessages((prev) => [
-      ...prev,
-      { ...lastMessage.payload, code: room.code, timestamp: new Date().toISOString() }
-    ])
-
-    if (document.hidden && Notification.permission === 'granted') {
-      new Notification('New message', {
-        body: `${lastMessage.payload.user}: ${lastMessage.payload.body}`
-      })
-    }
-  }, [channelMessages, room.code, setMessages])
-
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim() || !room?.code || connectionStatus !== 'connected') return
 
-    sendMessage('new_message', {
+    sendRoomMessage(room.id, 'new_message', {
       body: input,
       user: user,
       code: room.code,
@@ -142,6 +123,7 @@ export default function ChatRoom({ room, onNavigateBack }: ChatRoomProps) {
     )
   }
 
+  const list = messages ?? []
   const canSend = connectionStatus === 'connected' && Boolean(userColor)
 
   return (
@@ -195,7 +177,6 @@ export default function ChatRoom({ room, onNavigateBack }: ChatRoomProps) {
       ) : null}
 
       <div className='relative flex min-h-0 flex-1'>
-        {/* Side rails: darker than the thread so the centered column reads as the “chat surface” (Discord-style) */}
         <div
           className='hidden min-w-0 flex-1 bg-kumpel-elevated/90 bg-[linear-gradient(90deg,rgba(0,0,0,0.12),transparent)] md:block'
           aria-hidden
@@ -205,12 +186,12 @@ export default function ChatRoom({ room, onNavigateBack }: ChatRoomProps) {
           className='h-full min-h-0 w-full min-w-0 flex-1 overflow-y-auto border-kumpel-border/80 bg-kumpel-sidebar/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] md:w-[48rem] md:max-w-[48rem] md:flex-none md:border-x lg:w-[52rem] lg:max-w-[52rem] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-kumpel-elevated/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-kumpel-border hover:[&::-webkit-scrollbar-thumb]:bg-kumpel-hover-strong'
           onScroll={checkIfAtBottom}>
           <div className='space-y-1 px-3 py-4 sm:px-6'>
-            {messages.length === 0 ? (
+            {list.length === 0 ? (
               <p className='py-12 text-center text-sm text-kumpel-muted'>
                 No messages yet. Say hello — this channel is quiet.
               </p>
             ) : null}
-            {messages.map((message, index) => {
+            {list.map((message, index) => {
               const isSelf = message.user === user
               return (
                 <div
@@ -263,7 +244,7 @@ export default function ChatRoom({ room, onNavigateBack }: ChatRoomProps) {
           aria-hidden
         />
 
-        {!isAtBottom && messages.length > 0 ? (
+        {!isAtBottom && list.length > 0 ? (
           <Button
             type='button'
             size='sm'

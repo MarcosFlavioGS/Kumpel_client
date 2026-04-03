@@ -4,9 +4,12 @@ import { useState, useEffect, useCallback } from 'react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
 import { useUserStore, useChatStore } from '@/app/stores'
 import { useRouter } from 'next/navigation'
 import ChatRoom from './chatRoom'
+import { RoomSocketProvider } from '@/components/roomSocketProvider'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { LogOut, Hash } from 'lucide-react'
 import { SubscribeRoomDialog } from './subscribeRoomDialog'
 import { CreateRoomDialog } from './createRoomDialog'
@@ -63,18 +66,25 @@ export default function Dashboard() {
   const userName = useUserStore((state) => state.userName)
   const clearAuth = useUserStore((state) => state.clearAuth)
   const setUserName = useUserStore((state) => state.setUserName)
-  const setMessages = useChatStore((state) => state.setMessages)
+  const clearUnreadForRoom = useChatStore((state) => state.clearUnreadForRoom)
+  const resetChat = useChatStore((state) => state.resetChat)
+  const isMdUp = useMediaQuery('(min-width: 768px)')
 
   const handleLogout = () => {
+    resetChat()
     clearAuth()
     router.push('/')
   }
 
   const selectRoom = (room: ChatRoomData) => {
-    setMessages([])
+    clearUnreadForRoom(room.id)
     setSelectedRoom(room)
     setShowMobileChat(true)
   }
+
+  /** Chat is “in focus” for unread + notifications: desktop split always; mobile only when chat pane open */
+  const activeChannelId =
+    selectedRoom && (showMobileChat || isMdUp) ? selectedRoom.id : null
 
   const fetchUserRooms = useCallback(
     async (options?: { silent?: boolean }) => {
@@ -195,8 +205,12 @@ export default function Dashboard() {
   }
 
   return (
-    <div className='flex h-full min-h-0 flex-col bg-kumpel-bg md:flex-row'>
-      <aside className={sidebarClass}>
+    <RoomSocketProvider
+      token={token}
+      rooms={rooms}
+      activeChannelId={activeChannelId}>
+      <div className='flex h-full min-h-0 flex-col bg-kumpel-bg md:flex-row'>
+        <aside className={sidebarClass}>
         <div className='flex items-center justify-between gap-2 border-b border-kumpel-border px-3 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] md:pt-3'>
           <div className='min-w-0'>
             <h2 className='truncate text-sm font-semibold uppercase tracking-wide text-kumpel-muted'>Channels</h2>
@@ -229,53 +243,20 @@ export default function Dashboard() {
 
         <ScrollArea className='mt-2 min-h-0 flex-1 px-2 pb-2'>
           <div className='space-y-0.5 pr-2'>
-            {rooms.map((room) => {
-              const selected = selectedRoom?.id === room.id
-              return (
-                <button
-                  key={room.id}
-                  type='button'
-                  onClick={() => selectRoom(room)}
-                  className={cn(
-                    'group flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left transition-colors active:bg-kumpel-hover-strong md:py-2',
-                    selected
-                      ? 'bg-kumpel-hover-strong text-white shadow-sm ring-1 ring-white/[0.06]'
-                      : 'text-zinc-300 hover:bg-kumpel-hover hover:text-white'
-                  )}>
-                  <span
-                    className={cn(
-                      'w-1 shrink-0 self-stretch rounded-full transition-colors',
-                      selected ? 'bg-kumpel-accent' : 'bg-transparent group-hover:bg-kumpel-border'
-                    )}
-                    aria-hidden
-                  />
-                  <Avatar
-                    className={cn(
-                      'h-9 w-9 shrink-0 transition-transform duration-200',
-                      selected ? 'ring-2 ring-kumpel-accent/50' : 'group-hover:scale-[1.02]'
-                    )}>
-                    <AvatarFallback
-                      className={cn(
-                        'text-sm font-semibold text-white',
-                        selected ? 'bg-kumpel-accent' : 'bg-kumpel-input'
-                      )}>
-                      {room.name.slice(0, 1).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className='min-w-0 flex-1'>
-                    <p className='truncate text-sm font-medium leading-tight'>{room.name}</p>
-                    <p className='truncate font-mono text-[11px] text-kumpel-muted'>Code · {room.code}</p>
-                  </div>
-                </button>
-              )
-            })}
+            {rooms.map((room) => (
+              <ChannelRow
+                key={room.id}
+                room={room}
+                selected={selectedRoom?.id === room.id}
+                onSelect={() => selectRoom(room)}
+              />
+            ))}
           </div>
         </ScrollArea>
 
         <div className='mt-auto space-y-2 border-t border-kumpel-border p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:pb-3'>
           <CreateRoomDialog
             onCreated={(room) => {
-              setMessages([])
               setRooms((prev) => {
                 if (prev.some((r) => r.id === room.id)) return prev
                 return [room, ...prev]
@@ -315,6 +296,66 @@ export default function Dashboard() {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </RoomSocketProvider>
+  )
+}
+
+function ChannelRow({
+  room,
+  selected,
+  onSelect
+}: {
+  room: ChatRoomData
+  selected: boolean
+  onSelect: () => void
+}) {
+  const unread = useChatStore((s) => s.unreadByRoomId[room.id] ?? 0)
+
+  return (
+    <button
+      type='button'
+      onClick={onSelect}
+      className={cn(
+        'group flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left transition-colors active:bg-kumpel-hover-strong md:py-2',
+        selected
+          ? 'bg-kumpel-hover-strong text-white shadow-sm ring-1 ring-white/[0.06]'
+          : 'text-zinc-300 hover:bg-kumpel-hover hover:text-white'
+      )}>
+      <span
+        className={cn(
+          'w-1 shrink-0 self-stretch rounded-full transition-colors',
+          selected ? 'bg-kumpel-accent' : 'bg-transparent group-hover:bg-kumpel-border'
+        )}
+        aria-hidden
+      />
+      <div className='relative shrink-0'>
+        <Avatar
+          className={cn(
+            'h-9 w-9 transition-transform duration-200',
+            selected ? 'ring-2 ring-kumpel-accent/50' : 'group-hover:scale-[1.02]'
+          )}>
+          <AvatarFallback
+            className={cn(
+              'text-sm font-semibold text-white',
+              selected ? 'bg-kumpel-accent' : 'bg-kumpel-input'
+            )}>
+            {room.name.slice(0, 1).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+        {unread > 0 ? (
+          <Badge
+            className='pointer-events-none absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center border-0 bg-kumpel-danger px-1 text-[10px] font-bold leading-none text-white shadow-md ring-2 ring-kumpel-sidebar'
+            variant='destructive'
+            aria-label={`${unread} unread messages`}>
+            {unread > 99 ? '99+' : unread}
+          </Badge>
+        ) : null}
+      </div>
+      <div className='min-w-0 flex-1'>
+        <p className='truncate text-sm font-medium leading-tight'>{room.name}</p>
+        <p className='truncate font-mono text-[11px] text-kumpel-muted'>Code · {room.code}</p>
+      </div>
+    </button>
   )
 }
