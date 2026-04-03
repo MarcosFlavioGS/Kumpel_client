@@ -15,6 +15,13 @@ For a maintainer-oriented overview (stack, env vars, API/WebSocket shape, deploy
 - **User Colors**: Each user gets a unique color for better message distinction
 - **Auto-scroll**: Smart scrolling that respects user's reading position
 
+### Background tabs and auth (short)
+
+- **Mobile / background:** Unread badges need **JavaScript + WebSocket**. If the browser **suspends the tab** (app switcher, another app in front), **messages are not received** until you open Kumpel again; the client then **reconnects**. For alerts while away you’d add **Web Push** (service worker + server) or **fetch message history** from the API after reconnect.
+- **Back vs logout:** Auth uses **`router.replace('/dashboard')`** and auto-redirect from **`/`** and **`/login`** when a token exists, so the system **back** button does not strand you on login while still logged in. **Logout** still clears the session.
+
+Details: **[`doc/project_analysis.md`](doc/project_analysis.md)** → *Background delivery, auth navigation, and long-lived sessions*.
+
 ## 🛠️ Tech Stack
 
 - **Frontend**:

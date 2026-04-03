@@ -139,6 +139,22 @@ When you change colors, spacing, or UX patterns, update **`tailwind.config.ts`**
 
 ---
 
+## Background delivery, auth navigation, and long-lived sessions
+
+### Why unread does not update when the app is in the background
+
+- **WebSockets only work while the browser is allowed to run your JavaScript.** On **mobile**, when the user switches apps or minimizes the browser, the OS often **suspends the tab**: timers freeze, the socket may **close**, and **no client code runs** — so new messages are **not received** and the **unread badge cannot increment** until the user returns.
+- **Phoenix** already tries to **reconnect when the tab becomes visible** again; the client also calls **`socket.connect()`** on **`visibilitychange` / `pageshow`** when disconnected, so **live delivery resumes after** the user opens the app again.
+- **What this does *not* fix:** messages that arrived **while the tab was fully suspended** are **lost to the client** unless the **server stores history** and the app **fetches missed messages** (REST or replay on join). True **push while away** needs **Web Push** (service worker + backend integration with FCM/APNs) or a **native** client.
+
+### Auth: back button and “session”
+
+- **Session today:** a **JWT** (and related fields) in **`useUserStore`**, **persisted in `localStorage`** as `userStore`. There is **no refresh-token flow** in this repo yet; longevity depends on **API token expiry** only.
+- **Back button:** Previously, **history** could stack **`/login` → `/dashboard`**, so **Back** returned to the login UI even though the token still existed. **Fix:** after login/signup use **`router.replace('/dashboard')`** (no extra history entry for the auth screen), and **`/` + `/login`** **`useEffect`** redirect to **`/dashboard`** when a **token** is already present so Back to auth routes bounces forward instead of showing a dead login form.
+- **Stronger sessions (mostly backend):** **Refresh tokens** (short-lived access + long-lived refresh), **httpOnly cookies**, and **middleware**-based protection are **server concerns**; the SPA can then call a **refresh** endpoint before API/WebSocket calls. **OAuth** / **session cookies** follow the same pattern.
+
+---
+
 ## Deployment
 
 - **Vercel**: `vercel.json` runs **`bun install --frozen-lockfile`**; commit **`bun.lock`**. Set **`NEXT_PUBLIC_API_URL`** and **`NEXT_PUBLIC_WS_URL`** for the deployed API/WebSocket endpoints.
@@ -149,6 +165,8 @@ When you change colors, spacing, or UX patterns, update **`tailwind.config.ts`**
 
 - Consider **route groups**, **middleware**, or **server-side session checks** if you want stricter protection than client-only redirects.
 - **Stable message IDs** from the API would allow stricter list keys than `timestamp + index + user`.
+- **Message history API** (per room, `since` cursor) to **backfill** after reconnect or background; **Web Push** for notifications when the app is not active.
+- **Refresh-token** (or cookie session) flow on the **Phoenix** side and thin client glue to renew JWT before expiry.
 
 ---
 

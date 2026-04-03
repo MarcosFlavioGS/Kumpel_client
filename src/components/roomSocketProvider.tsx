@@ -91,6 +91,28 @@ export function RoomSocketProvider({
     }
   }, [token])
 
+  /**
+   * Mobile browsers suspend background tabs; the socket can drop without Phoenix retrying (e.g. clean close).
+   * Nudge connect when the user returns so channels can rejoin and live delivery resumes.
+   * This does not deliver messages that arrived while the app was fully suspended — that needs push or a history API.
+   */
+  useEffect(() => {
+    if (!token) return
+    const onBecameVisible = () => {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return
+      const s = socketRef.current
+      if (s && !s.isConnected()) {
+        s.connect()
+      }
+    }
+    document.addEventListener('visibilitychange', onBecameVisible)
+    window.addEventListener('pageshow', onBecameVisible)
+    return () => {
+      document.removeEventListener('visibilitychange', onBecameVisible)
+      window.removeEventListener('pageshow', onBecameVisible)
+    }
+  }, [token])
+
   useEffect(() => {
     const socket = socketRef.current
     if (!socket || !token) return

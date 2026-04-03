@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
@@ -16,7 +16,14 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter()
+  const token = useUserStore((state) => state.token)
   const setToken = useUserStore((state) => state.setToken)
+
+  useEffect(() => {
+    if (token) {
+      router.replace('/dashboard')
+    }
+  }, [token, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,7 +48,7 @@ export default function Login() {
 
       const data = await response.json()
       setToken(data.token)
-      router.push('/dashboard')
+      router.replace('/dashboard')
     } catch (err) {
       console.error('Error logging in:', err)
       setError(err instanceof Error ? err.message : 'Failed to log in')

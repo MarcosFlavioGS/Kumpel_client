@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
@@ -22,7 +22,14 @@ export default function Home() {
   const [validationErrors, setValidationErrors] = useState<ValidationError>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter()
+  const token = useUserStore((state) => state.token)
   const setToken = useUserStore((state) => state.setToken)
+
+  useEffect(() => {
+    if (token) {
+      router.replace('/dashboard')
+    }
+  }, [token, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -50,7 +57,7 @@ export default function Home() {
       }
 
       setToken(data.token)
-      router.push('/dashboard')
+      router.replace('/dashboard')
     } catch (err) {
       console.error('Error creating account:', err)
       setError(err instanceof Error ? err.message : 'Failed to create account')
