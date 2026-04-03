@@ -42,7 +42,7 @@ Before making non-trivial changes, read **`doc/project_analysis.md`**. It descri
 
 ## Realtime (Phoenix)
 
-- WebSocket URL and channel naming are documented in **`doc/project_analysis.md`**. When changing **`useChannel`** or join payloads, verify against the Phoenix backend’s channel module and auth expectations.
+- WebSocket URL and channel naming are documented in **`doc/project_analysis.md`**. The dashboard uses **`RoomSocketProvider`** (multi-room joins). When changing realtime wiring or **`useChannel`**, verify against the Phoenix backend’s channel module and auth expectations.
 
 ## Tooling
 

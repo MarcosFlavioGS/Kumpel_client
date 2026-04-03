@@ -43,10 +43,10 @@ kumpel_app/
 │   │   ├── login/page.tsx
 │   │   ├── dashboard/page.tsx
 │   │   ├── stores/             # Zustand stores (user, chat)
-│   │   └── hooks/              # Custom hooks (import as @/hooks/… — see tsconfig paths)
+│   │   └── hooks/              # e.g. useChannel, useMediaQuery (@/hooks/…)
 │   ├── components/             # Feature + shared UI
 │   │   ├── ui/                 # shadcn components
-│   │   ├── dashboard.tsx, chatRoom.tsx, dialogs, landing, etc.
+│   │   ├── dashboard.tsx, chatRoom.tsx, roomSocketProvider.tsx, dialogs, landing, etc.
 │   ├── config.ts               # API_URL / WS_URL from env + dev localhost normalization
 │   ├── lib/utils.ts            # cn() helper (shadcn)
 │   ├── lib/kumpel-ui.ts        # Shared form field classes (Discord-style inputs)
@@ -88,13 +88,15 @@ In development, **https/wss URLs pointing at localhost are rewritten to http/ws*
 ### Authentication & storage
 
 - **`useUserStore`**: `token`, `userName`, `email`; persisted to `localStorage` as `userStore`.
-- **`useChatStore`**: in-memory message list for the active view; also persisted (name: `chatStore`) — worth being aware of for multi-tab / stale history behavior.
+- **`useChatStore`**: **`messagesByRoomId`** (per-room arrays, last **250** messages per room), **`unreadByRoomId`** (badge counts). Persisted under **`localStorage`** key **`kumpel-chat`** (`partialize` only messages + unread). **`resetChat`** on logout.
 - Dashboard redirects to `/` if there is no token or on **401** from `currentUser`.
 
 ### Realtime
 
-- **`useChannel`** (`@/hooks/useChannel`) creates a Phoenix `Socket` to `WS_URL/socket`, joins `channelName` (e.g. `chat_room:<room_uuid>`) with optional join payload `{ code }` and optional `token` in socket params.
-- **`ChatRoom`** passes **`token`** into `useChannel` (Phoenix socket `params`) when present, merges `new_message` into `useChatStore`, surfaces **connection status** in the header, and can show **browser notifications** when the tab is hidden.
+- **`RoomSocketProvider`** (`src/components/roomSocketProvider.tsx`): one Phoenix **`Socket`** (`WS_URL/socket`, `params.token`), joins **every** listed room as `chat_room:<uuid>` with `{ code }`. Incoming **`new_message`** → **`appendMessageForRoom`**; if the channel is not **active** (see below), increments **unread** and may fire **`Notification`** when the document is hidden.
+- **Active channel** (no unread for that room): `activeChannelId` = selected room when the user **sees** the chat — on **mobile**, only when the chat pane is open (`showMobileChat`); on **`md+`**, whenever a room is selected (split view). Implemented with **`useMediaQuery('(min-width: 768px)')`** in the dashboard.
+- **`ChatRoom`**: reads **`messagesByRoomId[room.id]`**, sends via **`useRoomSocket().sendRoomMessage`**, shows **per-room connection** status from the provider.
+- **`useChannel`** (`@/hooks/useChannel`) remains available for simple single-channel usage; the dashboard uses **`RoomSocketProvider`** instead.
 
 ---
 
@@ -127,7 +129,7 @@ The UI aims for a **modern, Discord-like** dark shell: deep grey surfaces, **blu
 
 - **Button** variant **`kumpel`**: blurple primary with focus ring (`src/components/ui/button.tsx`).
 - **Forms**: shared classes from **`src/lib/kumpel-ui.ts`** (`kumpelFieldClass`, `kumpelLabelClass`, `kumpelInputClassName`) for inputs and labels on auth and dialogs.
-- **Dashboard**: channel list as **accessible buttons** (not div cards) with **selection** state (accent bar, ring on avatar), **skeleton** loading, **empty state** copy when no channel is selected (desktop split view); **“Channels”** header + optional display name. **Mobile (`< md`)**: **stacked layout** — full-width channel list first; opening a channel shows **full-width chat** and hides the list; **back** in the chat header returns to the list (selection preserved). **Desktop (`md+`)**: fixed **272px** sidebar + main pane. Shell uses **`h-dvh`** on the dashboard route to reduce mobile browser chrome overflow issues; **safe-area** padding on sidebar header and chat composer where helpful.
+- **Dashboard**: channel list as **accessible buttons** with **selection** state, **unread badge** (red pill on avatar, up to **99+**), **skeleton** loading, **empty state** when no channel selected (desktop). **Mobile (`< md`)**: stacked list ↔ chat + **back**; **`activeChannelId`** logic ties unread to whether the user is actually viewing chat. **Desktop (`md+`)**: **272px** sidebar + main. **`h-dvh`**, **safe-area** padding where helpful.
 - **Chat**: **connection pill** (dot + status) and **join error** banner; **message list** sits in a fixed-width **thread column** (`md`: 48rem, `lg`: 52rem) with a slightly **lighter translucent surface** (`bg-kumpel-sidebar/35`), **inset top highlight**, and **vertical borders**, flanked on wide viewports by **darker elevated rails** so the center does not read as “empty margins on the same flat color”; **message bubbles** (rounded, hover row tint); **own messages** aligned with distinct bubble style; **stable display color** per username (hash of name); **“Latest”** scroll affordance when the user has scrolled up; **composer** widths match the thread column; composer disabled until connected; placeholders reflect connecting/waiting.
 - **Dialogs**: **`DialogOverlay`** uses light **backdrop blur**; modal content uses `kumpel` panel colors, **`Cancel`** + primary actions, **Enter** submits via `<form>` on create/join.
 
