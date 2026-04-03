@@ -38,7 +38,6 @@ interface CreateRoomDialogProps {
 
 export function CreateRoomDialog({ onCreated }: CreateRoomDialogProps) {
   const [name, setName] = useState('')
-  const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [open, setOpen] = useState(false)
@@ -46,14 +45,9 @@ export function CreateRoomDialog({ onCreated }: CreateRoomDialogProps) {
 
   const handleCreate = async () => {
     const trimmedName = name.trim()
-    const trimmedCode = code.trim()
 
     if (trimmedName.length < 2) {
       setError('Room name must be at least 2 characters')
-      return
-    }
-    if (trimmedCode.length < 6) {
-      setError('Access code must be at least 6 characters')
       return
     }
 
@@ -68,8 +62,7 @@ export function CreateRoomDialog({ onCreated }: CreateRoomDialogProps) {
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
-          name: trimmedName,
-          code: trimmedCode
+          name: trimmedName
         })
       })
 
@@ -87,16 +80,18 @@ export function CreateRoomDialog({ onCreated }: CreateRoomDialogProps) {
 
       const roomId = data.data?.id ?? data.id
       const roomName = data.data?.name ?? trimmedName
-      const roomCode = data.data?.code ?? trimmedCode
+      const roomCode = data.data?.code
 
       if (!roomId) {
         throw new Error('Server did not return a room id')
+      }
+      if (!roomCode) {
+        throw new Error('Server did not return an access code')
       }
 
       onCreated({ id: String(roomId), name: roomName, code: roomCode })
       setOpen(false)
       setName('')
-      setCode('')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not create room')
     } finally {
@@ -113,7 +108,7 @@ export function CreateRoomDialog({ onCreated }: CreateRoomDialogProps) {
         <DialogHeader>
           <DialogTitle className="text-white">Create a room</DialogTitle>
           <DialogDescription className="text-gray-400">
-            Choose a display name and an access code (share the code with people you invite).
+            Pick a name; the server creates a random access code. You will see it in the sidebar and can share it with guests.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -128,20 +123,6 @@ export function CreateRoomDialog({ onCreated }: CreateRoomDialogProps) {
               className="col-span-3 bg-[#40444b] border-[#202225] text-white placeholder:text-gray-400 focus:border-indigo-500"
               type="text"
               placeholder="Room name"
-              autoComplete="off"
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="create-room-code" className="text-right text-gray-300">
-              Code
-            </Label>
-            <Input
-              id="create-room-code"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              className="col-span-3 bg-[#40444b] border-[#202225] text-white placeholder:text-gray-400 focus:border-indigo-500"
-              type="text"
-              placeholder="At least 6 characters"
               autoComplete="off"
             />
           </div>

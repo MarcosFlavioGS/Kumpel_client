@@ -49,12 +49,20 @@ A modern, real-time chat application built with Next.js and Phoenix WebSocket.
    ```
 
 3. **Environment Setup**
-   With `npm run dev`, the app defaults to the local API at `http://localhost:4000` and WebSocket at `ws://localhost:4000` (run the Phoenix backend on port 4000).
+   With `npm run dev`, the app defaults to the local API at `http://localhost:4000` and WebSocket at `ws://localhost:4000` (run the Phoenix backend with `mix phx.server` on port 4000).
+
+   **Important:** the dev server speaks **plain HTTP**, not TLS. For localhost you must use **`http://`** and **`ws://`**. Using `https://` or `wss://` against `localhost:4000` makes the browser send TLS on a non-TLS port; the backend may log a warning like *"Connection that looks like TLS received on a clear channel"* and requests will fail.
 
    Optional: create a `.env.local` to override (e.g. point at production while developing the UI):
    ```env
    NEXT_PUBLIC_API_URL=https://kumpel-back.fly.dev
    NEXT_PUBLIC_WS_URL=wss://kumpel-back.fly.dev
+   ```
+
+   For local backend explicitly (same as defaults):
+   ```env
+   NEXT_PUBLIC_API_URL=http://localhost:4000
+   NEXT_PUBLIC_WS_URL=ws://localhost:4000
    ```
 
 4. **Run the development server**
@@ -107,7 +115,7 @@ kumpel_app/
 
 - `POST /api/auth/login` - User login
 - `POST /api/users` - User registration
-- `POST /api/rooms` - Create a room (body: `{ "name": "<name>", "code": "<access code (≥6 chars)>" }`; authenticated)
+- `POST /api/rooms` - Create a room (body: `{ "name": "<name>" }`; authenticated). The API assigns a random access code and returns it in the response.
 - `POST /api/rooms/subscribe` - Join a chat room (body: `{ "name": "<room name>", "code": "<access code>" }`; authenticated)
 - `GET /api/currentUser` - Get user's rooms and data
 
