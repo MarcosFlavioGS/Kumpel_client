@@ -10,16 +10,17 @@ import { useRouter } from 'next/navigation'
 import ChatRoom from './chatRoom'
 import { LogOut } from 'lucide-react'
 import { SubscribeRoomDialog } from './subscribeRoomDialog'
+import { CreateRoomDialog } from './createRoomDialog'
 import { API_URL } from '@/config'
 
 interface Room {
   name: string
-  room_id: number
+  room_id: string
   code: string
 }
 
 interface UserData {
-  id: number
+  id: string
   name: string
   mail: string
   created_rooms?: Room[]
@@ -56,9 +57,10 @@ export default function Dashboard() {
     router.push('/')
   }
 
-  const fetchUserRooms = async () => {
+  const fetchUserRooms = async (options?: { silent?: boolean }) => {
+    const silent = options?.silent ?? false
     try {
-      setIsLoading(true)
+      if (!silent) setIsLoading(true)
       setError(null)
 
       const response = await fetch(`${API_URL}/api/currentUser`, {
@@ -102,7 +104,7 @@ export default function Dashboard() {
         // Combine created and subscribed rooms, ensuring uniqueness
         const allRooms = [...createdRooms, ...subscribedRooms]
           .filter(room => {
-            const roomId = room.room_id.toString()
+            const roomId = String(room.room_id)
             if (uniqueRoomIds.has(roomId)) {
               return false
             }
@@ -110,7 +112,7 @@ export default function Dashboard() {
             return true
           })
           .map((room) => ({
-            id: room.room_id.toString(),
+            id: String(room.room_id),
             name: room.name,
             code: room.code
           }))
@@ -137,7 +139,7 @@ export default function Dashboard() {
         setError('An unexpected error occurred. Please try again.')
       }
     } finally {
-      setIsLoading(false)
+      if (!silent) setIsLoading(false)
     }
   }
 
@@ -193,8 +195,23 @@ export default function Dashboard() {
           </div>
         </ScrollArea>
 
-        <div className='mt-4 pt-4 border-t border-[#202225]'>
-          <SubscribeRoomDialog />
+        <div className='mt-4 pt-4 border-t border-[#202225] space-y-2'>
+          <CreateRoomDialog
+            onCreated={(room) => {
+              setMessages([])
+              setRooms((prev) => {
+                if (prev.some((r) => r.id === room.id)) return prev
+                return [room, ...prev]
+              })
+              setSelectedRoom(room)
+              void fetchUserRooms({ silent: true })
+            }}
+          />
+          <SubscribeRoomDialog
+            onSubscribed={() => {
+              void fetchUserRooms({ silent: true })
+            }}
+          />
         </div>
       </div>
 

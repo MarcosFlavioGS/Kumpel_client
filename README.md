@@ -49,9 +49,12 @@ A modern, real-time chat application built with Next.js and Phoenix WebSocket.
    ```
 
 3. **Environment Setup**
-   Create a `.env.local` file in the root directory:
+   With `npm run dev`, the app defaults to the local API at `http://localhost:4000` and WebSocket at `ws://localhost:4000` (run the Phoenix backend on port 4000).
+
+   Optional: create a `.env.local` to override (e.g. point at production while developing the UI):
    ```env
    NEXT_PUBLIC_API_URL=https://kumpel-back.fly.dev
+   NEXT_PUBLIC_WS_URL=wss://kumpel-back.fly.dev
    ```
 
 4. **Run the development server**
@@ -100,8 +103,11 @@ kumpel_app/
 
 - `POST /api/auth/login` - User login
 - `POST /api/users` - User registration
-- `POST /api/rooms/subscribe` - Join a chat room
+- `POST /api/rooms` - Create a room (body: `{ "name": "<name>", "code": "<access code (≥6 chars)>" }`; authenticated)
+- `POST /api/rooms/subscribe` - Join a chat room (body: `{ "name": "<room name>", "code": "<access code>" }`; authenticated)
 - `GET /api/currentUser` - Get user's rooms and data
+
+User and room identifiers in API responses are UUID strings. WebSocket channel topics use `chat_room:<room_uuid>` with join payload `{ "code": "<access code>" }`.
 
 ## 🎨 UI Components
 

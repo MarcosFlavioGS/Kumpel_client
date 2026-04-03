@@ -17,8 +17,13 @@ import { useUserStore } from '@/app/stores'
 import { useRouter } from 'next/navigation'
 import { API_URL } from '@/config'
 
-export function SubscribeRoomDialog() {
-  const [roomId, setRoomId] = useState('')
+interface SubscribeRoomDialogProps {
+  /** Called after a successful subscribe so the parent can refresh room list (e.g. silent refetch). */
+  onSubscribed?: () => void
+}
+
+export function SubscribeRoomDialog({ onSubscribed }: SubscribeRoomDialogProps) {
+  const [roomName, setRoomName] = useState('')
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -27,7 +32,7 @@ export function SubscribeRoomDialog() {
   const token = useUserStore((state) => state.token)
 
   const handleSubscribe = async () => {
-    if (!roomId || !code) {
+    if (!roomName.trim() || !code.trim()) {
       setError('Please fill in all fields')
       return
     }
@@ -43,19 +48,24 @@ export function SubscribeRoomDialog() {
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
-          room_id: parseInt(roomId),
-          code: code
+          name: roomName.trim(),
+          code: code.trim()
         })
       })
 
-      const data = await response.json()
+      const data = await response.json().catch(() => ({}))
 
-      if (data.status !== ':ok') {
-        throw new Error(data.message || 'Failed to subscribe to room')
+      if (!response.ok) {
+        throw new Error(
+          typeof data.message === 'string' ? data.message : 'Failed to subscribe to room'
+        )
       }
 
       // Only refresh and close dialog on successful subscription
       setOpen(false)
+      setRoomName('')
+      setCode('')
+      onSubscribed?.()
       router.refresh()
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to subscribe to room')
@@ -67,29 +77,31 @@ export function SubscribeRoomDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="bg-[#40444b] hover:bg-[#36393f] text-white border-[#202225]">
-          Subscribe to Room
+        <Button
+          variant="outline"
+          className="w-full bg-[#40444b] hover:bg-[#36393f] text-white border-[#202225]">
+          Subscribe to room
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px] bg-[#2f3136] border-[#202225] text-white">
         <DialogHeader>
           <DialogTitle className="text-white">Subscribe to a Room</DialogTitle>
           <DialogDescription className="text-gray-400">
-            Enter the room ID and access code to join a room.
+            Enter the room name and access code shared by the host (no room ID needed).
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="roomId" className="text-right text-gray-300">
-              Room ID
+            <Label htmlFor="roomName" className="text-right text-gray-300">
+              Room name
             </Label>
             <Input
-              id="roomId"
-              value={roomId}
-              onChange={(e) => setRoomId(e.target.value)}
+              id="roomName"
+              value={roomName}
+              onChange={(e) => setRoomName(e.target.value)}
               className="col-span-3 bg-[#40444b] border-[#202225] text-white placeholder:text-gray-400 focus:border-indigo-500"
-              type="number"
-              placeholder="Enter room ID"
+              type="text"
+              placeholder="Exact name of the room"
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
