@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useChannel } from '@/hooks/useChannel'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, ChevronLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { kumpelFieldClass } from '@/lib/kumpel-ui'
 
@@ -16,6 +16,8 @@ interface ChatRoomProps {
     name: string
     code: string
   }
+  /** Mobile stacked layout: return to channel list without clearing the selected room */
+  onNavigateBack?: () => void
 }
 
 const USER_COLORS = [
@@ -37,7 +39,7 @@ function colorForDisplayName(name: string): string {
   return USER_COLORS[Math.abs(h) % USER_COLORS.length]
 }
 
-export default function ChatRoom({ room }: ChatRoomProps) {
+export default function ChatRoom({ room, onNavigateBack }: ChatRoomProps) {
   const [input, setInput] = useState('')
   const [userColor, setUserColor] = useState('')
   const [isAtBottom, setIsAtBottom] = useState(true)
@@ -144,9 +146,20 @@ export default function ChatRoom({ room }: ChatRoomProps) {
 
   return (
     <div className='flex h-full flex-col bg-kumpel-bg'>
-      <header className='flex shrink-0 items-center justify-between gap-3 border-b border-kumpel-border bg-kumpel-bg px-4 py-3'>
-        <div className='flex min-w-0 items-center gap-3'>
-          <Avatar className='h-10 w-10 ring-2 ring-kumpel-border'>
+      <header className='flex shrink-0 items-center justify-between gap-2 border-b border-kumpel-border bg-kumpel-bg px-2 py-2 pt-[max(0.75rem,env(safe-area-inset-top))] sm:gap-3 sm:px-4 sm:py-3 sm:pt-3'>
+        <div className='flex min-w-0 flex-1 items-center gap-2 sm:gap-3'>
+          {onNavigateBack ? (
+            <Button
+              type='button'
+              variant='ghost'
+              size='icon'
+              className='shrink-0 text-kumpel-muted hover:bg-kumpel-hover hover:text-white md:hidden'
+              onClick={onNavigateBack}
+              aria-label='Back to channels'>
+              <ChevronLeft className='h-6 w-6' />
+            </Button>
+          ) : null}
+          <Avatar className='h-9 w-9 shrink-0 ring-2 ring-kumpel-border sm:h-10 sm:w-10'>
             <AvatarFallback className='bg-kumpel-accent text-sm font-bold text-white'>
               {room.name.slice(0, 1).toUpperCase()}
             </AvatarFallback>
@@ -266,7 +279,7 @@ export default function ChatRoom({ room }: ChatRoomProps) {
         ) : null}
       </div>
 
-      <div className='shrink-0 border-t border-kumpel-border bg-kumpel-elevated/80 p-3 backdrop-blur-sm sm:p-4'>
+      <div className='shrink-0 border-t border-kumpel-border bg-kumpel-elevated/80 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-sm sm:p-4 sm:pb-4'>
         <form
           onSubmit={handleSendMessage}
           className='mx-auto flex w-full min-w-0 max-w-full gap-2 px-3 sm:px-6 md:w-[48rem] md:max-w-[48rem] lg:w-[52rem] lg:max-w-[52rem]'>

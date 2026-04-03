@@ -54,6 +54,8 @@ function SidebarSkeleton() {
 export default function Dashboard() {
   const [rooms, setRooms] = useState<ChatRoomData[]>([])
   const [selectedRoom, setSelectedRoom] = useState<ChatRoomData | null>(null)
+  /** Below md: full-screen chat vs full-width channel list (desktop always shows split view). */
+  const [showMobileChat, setShowMobileChat] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
@@ -66,6 +68,12 @@ export default function Dashboard() {
   const handleLogout = () => {
     clearAuth()
     router.push('/')
+  }
+
+  const selectRoom = (room: ChatRoomData) => {
+    setMessages([])
+    setSelectedRoom(room)
+    setShowMobileChat(true)
   }
 
   const fetchUserRooms = useCallback(
@@ -156,16 +164,30 @@ export default function Dashboard() {
     void fetchUserRooms()
   }, [token, router, fetchUserRooms])
 
+  const sidebarClass = cn(
+    'flex h-full min-h-0 min-w-0 flex-col border-kumpel-border bg-kumpel-sidebar md:border-r',
+    'w-full md:w-[272px] md:shrink-0',
+    showMobileChat && selectedRoom ? 'hidden md:flex' : 'flex'
+  )
+
+  const mainClass = cn(
+    'relative min-h-0 min-w-0 flex-1 flex-col',
+    selectedRoom && showMobileChat ? 'flex' : 'hidden md:flex'
+  )
+
   if (isLoading) {
     return (
-      <div className='flex h-full min-h-0 bg-kumpel-bg'>
-        <aside className='flex h-full min-h-0 w-[272px] shrink-0 flex-col border-r border-kumpel-border bg-kumpel-sidebar'>
+      <div className='flex h-full min-h-0 flex-col bg-kumpel-bg md:flex-row'>
+        <aside className='flex h-full min-h-0 w-full min-w-0 flex-col border-b border-kumpel-border bg-kumpel-sidebar md:w-[272px] md:shrink-0 md:border-b-0 md:border-r'>
           <div className='border-b border-kumpel-border px-4 py-4'>
             <div className='h-5 w-32 animate-pulse rounded bg-kumpel-border' />
           </div>
           <SidebarSkeleton />
         </aside>
-        <div className='flex flex-1 items-center justify-center'>
+        <div className='hidden flex-1 items-center justify-center md:flex'>
+          <p className='text-sm text-kumpel-muted'>Loading your spaces…</p>
+        </div>
+        <div className='flex flex-1 items-center justify-center py-8 md:hidden'>
           <p className='text-sm text-kumpel-muted'>Loading your spaces…</p>
         </div>
       </div>
@@ -173,9 +195,9 @@ export default function Dashboard() {
   }
 
   return (
-    <div className='flex h-full min-h-0 bg-kumpel-bg'>
-      <aside className='flex h-full min-h-0 w-[272px] shrink-0 flex-col border-r border-kumpel-border bg-kumpel-sidebar'>
-        <div className='flex items-center justify-between gap-2 border-b border-kumpel-border px-3 py-3'>
+    <div className='flex h-full min-h-0 flex-col bg-kumpel-bg md:flex-row'>
+      <aside className={sidebarClass}>
+        <div className='flex items-center justify-between gap-2 border-b border-kumpel-border px-3 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] md:pt-3'>
           <div className='min-w-0'>
             <h2 className='truncate text-sm font-semibold uppercase tracking-wide text-kumpel-muted'>Channels</h2>
             {userName ? (
@@ -213,12 +235,9 @@ export default function Dashboard() {
                 <button
                   key={room.id}
                   type='button'
-                  onClick={() => {
-                    setMessages([])
-                    setSelectedRoom(room)
-                  }}
+                  onClick={() => selectRoom(room)}
                   className={cn(
-                    'group flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors',
+                    'group flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left transition-colors active:bg-kumpel-hover-strong md:py-2',
                     selected
                       ? 'bg-kumpel-hover-strong text-white shadow-sm ring-1 ring-white/[0.06]'
                       : 'text-zinc-300 hover:bg-kumpel-hover hover:text-white'
@@ -253,7 +272,7 @@ export default function Dashboard() {
           </div>
         </ScrollArea>
 
-        <div className='mt-auto space-y-2 border-t border-kumpel-border p-3'>
+        <div className='mt-auto space-y-2 border-t border-kumpel-border p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:pb-3'>
           <CreateRoomDialog
             onCreated={(room) => {
               setMessages([])
@@ -261,7 +280,7 @@ export default function Dashboard() {
                 if (prev.some((r) => r.id === room.id)) return prev
                 return [room, ...prev]
               })
-              setSelectedRoom(room)
+              selectRoom(room)
               void fetchUserRooms({ silent: true })
             }}
           />
@@ -273,9 +292,12 @@ export default function Dashboard() {
         </div>
       </aside>
 
-      <div className='relative min-w-0 flex-1'>
+      <div className={mainClass}>
         {selectedRoom ? (
-          <ChatRoom room={selectedRoom} />
+          <ChatRoom
+            room={selectedRoom}
+            onNavigateBack={() => setShowMobileChat(false)}
+          />
         ) : (
           <div className='flex h-full flex-col items-center justify-center gap-4 px-6 text-center'>
             <div className='flex h-16 w-16 items-center justify-center rounded-2xl bg-kumpel-sidebar ring-1 ring-kumpel-border'>
@@ -287,7 +309,7 @@ export default function Dashboard() {
             <div>
               <p className='text-lg font-semibold text-white'>Select a channel</p>
               <p className='mt-1 max-w-sm text-sm text-kumpel-muted'>
-                Pick a room on the left to jump in, or create a new one for your group.
+                Pick a room in the sidebar to start messaging, or create a new channel for your group.
               </p>
             </div>
           </div>

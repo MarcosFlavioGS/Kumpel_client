@@ -127,7 +127,7 @@ User and room identifiers in API responses are UUID strings. WebSocket channel t
 ## 🎨 UI & UX
 
 - **Discord-inspired dark UI**: blurple accent (`#5865F2`), layered greys (`kumpel.*` tokens in Tailwind), soft panel shadows, and glass-style auth cards (`kumpel-auth-bg` / `kumpel-auth-panel` in `globals.css`).
-- **Dashboard**: channel sidebar with selection states, skeleton loading, empty-state guidance, accessible channel rows (buttons).
+- **Dashboard**: channel sidebar with selection states, skeleton loading, empty-state guidance, accessible channel rows (buttons). On **small screens**, the list and chat **stack**: you get a full-width channel list, then full-width chat with a **back** control to return to the list (`md` and up keeps the split sidebar + chat).
 - **Chat**: connection status indicator, join-error banner, message bubbles with hover affordance, “jump to latest” when scrolled up, composer reflects connection state.
 - Shared form styling lives in **`src/lib/kumpel-ui.ts`**; full design notes are in **[`doc/project_analysis.md`](doc/project_analysis.md)** (section *UI & design system*).
 
