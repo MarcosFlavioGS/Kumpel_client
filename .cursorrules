@@ -38,7 +38,7 @@ Before making non-trivial changes, read **`doc/project_analysis.md`**. It descri
 
 - Keep **`strict`** typing; avoid `any` unless unavoidable and localized.
 - Share API/domain types in **`src/type/`** (or colocated types) instead of duplicating large interfaces across components.
-- Run **`yarn lint`** after substantive edits; fix new ESLint issues in touched files.
+- Run **`bun run lint`** after substantive edits; fix new ESLint issues in touched files.
 
 ## Realtime (Phoenix)
 
@@ -46,7 +46,7 @@ Before making non-trivial changes, read **`doc/project_analysis.md`**. It descri
 
 ## Tooling
 
-- Use **Yarn 4** (**`yarn`** / **`yarn dev`**) per `packageManager` in `package.json`. Dev server uses **Turbopack** (`next dev --turbopack`).
+- Use **Bun** for installs and scripts (**`bun install`**, **`bun run dev`**, **`bun run lint`**, **`bun run build`**) per `packageManager` in `package.json`. Dev server uses **Turbopack** (`next dev --turbopack`).
 
 ## Scope of edits
 

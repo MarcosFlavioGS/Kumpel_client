@@ -1,5 +1,5 @@
 /**
- * Defaults: local Phoenix in development (`npm run dev`), production Fly URLs otherwise.
+ * Defaults: local Phoenix in development (`bun run dev`), production Fly URLs otherwise.
  * Override with NEXT_PUBLIC_API_URL / NEXT_PUBLIC_WS_URL (e.g. in `.env.local`).
  *
  * Local `mix phx.server` is plain HTTP — use `http://` and `ws://` for localhost, not

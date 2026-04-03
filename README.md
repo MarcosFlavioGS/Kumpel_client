@@ -31,9 +31,10 @@ For a maintainer-oriented overview (stack, env vars, API/WebSocket shape, deploy
 
 ## 📋 Prerequisites
 
-- Node.js (v18 or higher)
-- npm or yarn
+- **[Bun](https://bun.sh/)** (recommended: match `packageManager` in `package.json`, e.g. 1.2.x)
 - Access to the Kumpel backend server
+
+Bun bundles a JavaScript runtime compatible with Next.js; you do not need a separate Node install for local dev unless you prefer it.
 
 ## 🚀 Getting Started
 
@@ -45,13 +46,12 @@ For a maintainer-oriented overview (stack, env vars, API/WebSocket shape, deploy
 
 2. **Install dependencies**
    ```bash
-   npm install
-   # or
-   yarn install
+   bun install
    ```
+   Commit **`bun.lock`** with the repo so CI and Vercel stay reproducible.
 
 3. **Environment Setup**
-   With `npm run dev`, the app defaults to the local API at `http://localhost:4000` and WebSocket at `ws://localhost:4000` (run the Phoenix backend with `mix phx.server` on port 4000).
+   With `bun run dev`, the app defaults to the local API at `http://localhost:4000` and WebSocket at `ws://localhost:4000` (run the Phoenix backend with `mix phx.server` on port 4000).
 
    **Important:** the dev server speaks **plain HTTP**, not TLS. For localhost you must use **`http://`** and **`ws://`**. Using `https://` or `wss://` against `localhost:4000` makes the browser send TLS on a non-TLS port; the backend may log a warning like *"Connection that looks like TLS received on a clear channel"* and requests will fail.
 
@@ -69,9 +69,7 @@ For a maintainer-oriented overview (stack, env vars, API/WebSocket shape, deploy
 
 4. **Run the development server**
    ```bash
-   npm run dev
-   # or
-   yarn dev
+   bun run dev
    ```
 
 5. **Open your browser**
@@ -79,7 +77,7 @@ For a maintainer-oriented overview (stack, env vars, API/WebSocket shape, deploy
 
 ## ☁️ Deploying on Vercel
 
-This repo uses **Yarn 4** (see `package.json` → `packageManager` and the Berry-format `yarn.lock`). The included `vercel.json` runs **Corepack** so the install uses Yarn 4 instead of the classic Yarn 1.x that Vercel would otherwise pick, which can break installs. Set `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_WS_URL` in the Vercel project to your production API if needed.
+Installs use **Bun** via **`vercel.json`** → `bun install --frozen-lockfile` (with **`bun.lock`** committed). Vercel detects Bun when a Bun lockfile is present. Set `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_WS_URL` in the Vercel project to your production API if needed.
 
 ## 📁 Project Structure
 

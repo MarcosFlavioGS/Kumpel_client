@@ -21,7 +21,7 @@ This document summarizes the **Kumpel** frontend: a group chat client that talks
 | UI primitives | **shadcn/ui** (Radix primitives, `new-york` style, `lucide-react` icons) |
 | Client state | **Zustand** with `persist` and `devtools` |
 | Realtime | **`phoenix` JS** client (`Socket`, `Channel`) |
-| Package manager | **Yarn 4** (`packageManager` in `package.json`; Vercel uses Corepack via `vercel.json`) |
+| Package manager | **Bun** (`packageManager` in `package.json`; lockfile **`bun.lock`**; Vercel install via **`vercel.json`**) |
 | Lint | **ESLint** with `eslint-config-next` (`next/core-web-vitals`, `next/typescript`) |
 
 Dev script uses **Turbopack** (`next dev --turbopack`).
@@ -55,7 +55,7 @@ kumpel_app/
 ├── next.config.ts
 ├── tailwind.config.ts
 ├── tsconfig.json               # paths: "@/*" → "./src/*"
-└── vercel.json                 # Yarn 4 install on Vercel
+└── vercel.json                 # `bun install --frozen-lockfile` on Vercel
 ```
 
 **Imports:** `tsconfig.json` maps `@/hooks/*` → `src/app/hooks/*`, matching shadcn’s `components.json` `hooks` alias.
@@ -139,7 +139,7 @@ When you change colors, spacing, or UX patterns, update **`tailwind.config.ts`**
 
 ## Deployment
 
-- **Vercel**: `vercel.json` ensures **Yarn 4** install; set **`NEXT_PUBLIC_API_URL`** and **`NEXT_PUBLIC_WS_URL`** for the deployed API/WebSocket endpoints.
+- **Vercel**: `vercel.json` runs **`bun install --frozen-lockfile`**; commit **`bun.lock`**. Set **`NEXT_PUBLIC_API_URL`** and **`NEXT_PUBLIC_WS_URL`** for the deployed API/WebSocket endpoints.
 
 ---
 
