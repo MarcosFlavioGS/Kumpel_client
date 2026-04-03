@@ -1,11 +1,14 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { useUserStore, useChatStore } from '@/app/stores'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { useChannel } from '@/app/hooks/useChannel'
+import { useChannel } from '@/hooks/useChannel'
+import { ChevronDown } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { kumpelFieldClass } from '@/lib/kumpel-ui'
 
 interface ChatRoomProps {
   room: {
@@ -15,15 +18,23 @@ interface ChatRoomProps {
   }
 }
 
-enum UserColor {
-  Red = '#FF5733',
-  Green = '#00ff00',
-  Blue = '#3357FF',
-  Purple = '#9B33FF',
-  Orange = '#FF9A33',
-  Yellow = '#FFEB33',
-  Cyan = '#33FFEB',
-  Pink = '#FF33A6'
+const USER_COLORS = [
+  '#FF5733',
+  '#3357FF',
+  '#9B33FF',
+  '#FF9A33',
+  '#FFEB33',
+  '#33FFEB',
+  '#FF33A6',
+  '#57F287'
+] as const
+
+function colorForDisplayName(name: string): string {
+  let h = 0
+  for (let i = 0; i < name.length; i++) {
+    h = name.charCodeAt(i) + ((h << 5) - h)
+  }
+  return USER_COLORS[Math.abs(h) % USER_COLORS.length]
 }
 
 export default function ChatRoom({ room }: ChatRoomProps) {
@@ -37,20 +48,32 @@ export default function ChatRoom({ room }: ChatRoomProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
 
-  const { messages: channelMessages, sendMessage } = useChannel(`chat_room:${room.id}`, { code: room.code })
+  const { messages: channelMessages, sendMessage, connectionStatus, error: channelError } = useChannel(
+    `chat_room:${room.id}`,
+    { code: room.code, token: token || undefined }
+  )
+
+  const connectionLabel = useMemo(() => {
+    switch (connectionStatus) {
+      case 'connected':
+        return 'Connected'
+      case 'connecting':
+        return 'Connecting…'
+      case 'error':
+        return 'Connection issue'
+      default:
+        return 'Offline'
+    }
+  }, [connectionStatus])
 
   useEffect(() => {
     if (!user || !token || !room?.code) return
 
-    // Request notification permission
     if ('Notification' in window) {
-      Notification.requestPermission()
+      void Notification.requestPermission()
     }
 
-    // Set user color
-    const colors = Object.values(UserColor)
-    const randomColor = colors[Math.floor(Math.random() * colors.length)]
-    setUserColor(randomColor)
+    setUserColor(colorForDisplayName(user))
   }, [user, token, room?.code])
 
   useEffect(() => {
@@ -64,7 +87,7 @@ export default function ChatRoom({ room }: ChatRoomProps) {
     ])
 
     if (document.hidden && Notification.permission === 'granted') {
-      new Notification('New Message', {
+      new Notification('New message', {
         body: `${lastMessage.payload.user}: ${lastMessage.payload.body}`
       })
     }
@@ -72,7 +95,7 @@ export default function ChatRoom({ room }: ChatRoomProps) {
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!input.trim() || !room?.code) return
+    if (!input.trim() || !room?.code || connectionStatus !== 'connected') return
 
     sendMessage('new_message', {
       body: input,
@@ -91,7 +114,7 @@ export default function ChatRoom({ room }: ChatRoomProps) {
   const checkIfAtBottom = () => {
     if (messagesContainerRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current
-      const isBottom = scrollHeight - scrollTop <= clientHeight + 10 // 10px threshold
+      const isBottom = scrollHeight - scrollTop <= clientHeight + 10
       setIsAtBottom(isBottom)
     }
   }
@@ -108,75 +131,168 @@ export default function ChatRoom({ room }: ChatRoomProps) {
     if (isAtBottom) {
       scrollToBottom()
     }
-    // Scroll when messages change; isAtBottom is read intentionally without listing it to avoid feedback loops.
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- see above
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- isAtBottom intentionally omitted; see history
   }, [messages])
 
   if (!room) {
-    return <div className='h-full flex items-center justify-center text-gray-500'>No room selected</div>
+    return (
+      <div className='flex h-full items-center justify-center text-kumpel-muted'>No room selected</div>
+    )
   }
 
+  const canSend = connectionStatus === 'connected' && Boolean(userColor)
+
   return (
-    <div className='flex flex-col h-full bg-[#36393f]'>
-      {/* Room Header */}
-      <div className='border-b border-[#202225] bg-[#36393f] p-4'>
-        <div className='flex items-center gap-3'>
-          <Avatar className='bg-indigo-600'>
-            <AvatarFallback className='text-white'>{room.name[0]}</AvatarFallback>
+    <div className='flex h-full flex-col bg-kumpel-bg'>
+      <header className='flex shrink-0 items-center justify-between gap-3 border-b border-kumpel-border bg-kumpel-bg px-4 py-3'>
+        <div className='flex min-w-0 items-center gap-3'>
+          <Avatar className='h-10 w-10 ring-2 ring-kumpel-border'>
+            <AvatarFallback className='bg-kumpel-accent text-sm font-bold text-white'>
+              {room.name.slice(0, 1).toUpperCase()}
+            </AvatarFallback>
           </Avatar>
-          <div>
-            <h2 className='font-semibold text-white'>{room.name}</h2>
-            <p className='text-sm text-gray-400'>Code: {room.code}</p>
+          <div className='min-w-0'>
+            <h2 className='truncate text-base font-semibold text-white'>{room.name}</h2>
+            <p className='truncate font-mono text-xs text-kumpel-muted'>Access code · {room.code}</p>
           </div>
         </div>
-      </div>
-
-      {/* Messages Area */}
-      <div 
-        ref={messagesContainerRef}
-        className='flex-1 overflow-y-auto p-4 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-[#2f3136] [&::-webkit-scrollbar-thumb]:bg-[#40444b] [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-[#36393f]'
-        onScroll={checkIfAtBottom}>
-        <div className='space-y-4'>
-          {messages.map((message, index) => (
-            <div
-              key={index}
-              className='flex gap-3'>
-              <Avatar className='bg-indigo-600'>
-                <AvatarFallback className='text-white'>{message.user[0]}</AvatarFallback>
-              </Avatar>
-              <div className='flex-1'>
-                <div className='flex items-baseline gap-2'>
-                  <span
-                    className='font-medium text-white'
-                    style={{ color: message.color }}>
-                    {message.user}
-                  </span>
-                  <span className='text-xs text-gray-400'>
-                    {new Date(message.timestamp).toLocaleTimeString()}
-                  </span>
-                </div>
-                <p className='text-gray-300'>{message.body}</p>
-              </div>
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
+        <div
+          className='flex shrink-0 items-center gap-2 rounded-full border border-kumpel-border bg-kumpel-sidebar/80 px-3 py-1.5'
+          title={channelError || connectionLabel}>
+          <span
+            className={cn(
+              'h-2 w-2 shrink-0 rounded-full',
+              connectionStatus === 'connected' && 'bg-kumpel-success shadow-[0_0_8px_rgba(35,165,89,0.7)]',
+              connectionStatus === 'connecting' && 'animate-pulse bg-amber-400',
+              connectionStatus === 'error' && 'bg-kumpel-danger',
+              connectionStatus === 'disconnected' && 'bg-kumpel-border'
+            )}
+            aria-hidden
+          />
+          <span className='hidden text-xs font-medium text-kumpel-muted sm:inline'>{connectionLabel}</span>
         </div>
+      </header>
+
+      {channelError && connectionStatus === 'error' ? (
+        <div
+          className='border-b border-kumpel-danger/30 bg-kumpel-danger/10 px-4 py-2 text-center text-sm text-red-200'
+          role='alert'>
+          {channelError}
+        </div>
+      ) : null}
+
+      <div className='relative flex min-h-0 flex-1'>
+        {/* Side rails: darker than the thread so the centered column reads as the “chat surface” (Discord-style) */}
+        <div
+          className='hidden min-w-0 flex-1 bg-kumpel-elevated/90 bg-[linear-gradient(90deg,rgba(0,0,0,0.12),transparent)] md:block'
+          aria-hidden
+        />
+        <div
+          ref={messagesContainerRef}
+          className='h-full min-h-0 w-full min-w-0 flex-1 overflow-y-auto border-kumpel-border/80 bg-kumpel-sidebar/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] md:w-[48rem] md:max-w-[48rem] md:flex-none md:border-x lg:w-[52rem] lg:max-w-[52rem] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-kumpel-elevated/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-kumpel-border hover:[&::-webkit-scrollbar-thumb]:bg-kumpel-hover-strong'
+          onScroll={checkIfAtBottom}>
+          <div className='space-y-1 px-3 py-4 sm:px-6'>
+            {messages.length === 0 ? (
+              <p className='py-12 text-center text-sm text-kumpel-muted'>
+                No messages yet. Say hello — this channel is quiet.
+              </p>
+            ) : null}
+            {messages.map((message, index) => {
+              const isSelf = message.user === user
+              return (
+                <div
+                  key={`${message.timestamp}-${index}-${message.user}`}
+                  className={cn(
+                    'group flex gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-white/[0.03]',
+                    isSelf && 'flex-row-reverse'
+                  )}>
+                  <Avatar className='mt-0.5 h-9 w-9 shrink-0 ring-1 ring-kumpel-border'>
+                    <AvatarFallback className='bg-kumpel-input text-xs font-semibold text-white'>
+                      {message.user.slice(0, 1).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div
+                    className={cn(
+                      'min-w-0 max-w-[min(100%,42rem)] rounded-2xl px-3 py-2',
+                      isSelf ? 'bg-kumpel-accent/25 text-white' : 'bg-kumpel-sidebar text-zinc-100 ring-1 ring-white/[0.05]'
+                    )}>
+                    <div
+                      className={cn(
+                        'flex flex-wrap items-baseline gap-x-2 gap-y-0',
+                        isSelf && 'flex-row-reverse'
+                      )}>
+                      <span
+                        className={cn('text-sm font-semibold', isSelf && 'text-white')}
+                        style={isSelf ? undefined : { color: message.color }}>
+                        {message.user}
+                      </span>
+                      <time
+                        className='text-[11px] text-kumpel-muted'
+                        dateTime={message.timestamp}>
+                        {new Date(message.timestamp).toLocaleTimeString(undefined, {
+                          hour: 'numeric',
+                          minute: '2-digit'
+                        })}
+                      </time>
+                    </div>
+                    <p className='mt-0.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-zinc-200'>
+                      {message.body}
+                    </p>
+                  </div>
+                </div>
+              )
+            })}
+            <div ref={messagesEndRef} />
+          </div>
+        </div>
+        <div
+          className='hidden min-w-0 flex-1 bg-kumpel-elevated/90 bg-[linear-gradient(270deg,rgba(0,0,0,0.12),transparent)] md:block'
+          aria-hidden
+        />
+
+        {!isAtBottom && messages.length > 0 ? (
+          <Button
+            type='button'
+            size='sm'
+            variant='secondary'
+            onClick={() => {
+              scrollToBottom()
+              setIsAtBottom(true)
+            }}
+            className='absolute bottom-4 right-4 gap-1 rounded-full border-kumpel-border bg-kumpel-sidebar shadow-lg ring-1 ring-white/10 hover:bg-kumpel-hover'>
+            <ChevronDown className='h-4 w-4' />
+            Latest
+          </Button>
+        ) : null}
       </div>
 
-      {/* Message Input */}
-      <div className='border-t border-[#202225] bg-[#40444b] p-4'>
+      <div className='shrink-0 border-t border-kumpel-border bg-kumpel-elevated/80 p-3 backdrop-blur-sm sm:p-4'>
         <form
           onSubmit={handleSendMessage}
-          className='flex gap-2'>
+          className='mx-auto flex w-full min-w-0 max-w-full gap-2 px-3 sm:px-6 md:w-[48rem] md:max-w-[48rem] lg:w-[52rem] lg:max-w-[52rem]'>
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder='Type a message...'
-            className='flex-1 bg-[#40444b] border-[#202225] text-white placeholder:text-gray-400 focus:border-indigo-500'
+            placeholder={
+              connectionStatus === 'connecting'
+                ? 'Connecting to channel…'
+                : connectionStatus !== 'connected'
+                  ? 'Waiting for connection…'
+                  : 'Message the channel'
+            }
+            disabled={!canSend}
+            className={cn(
+              kumpelFieldClass,
+              'h-11 flex-1 border-kumpel-border bg-kumpel-input text-[15px] text-white placeholder:text-kumpel-muted'
+            )}
+            autoComplete='off'
+            aria-label='Message'
           />
           <Button
             type='submit'
-            className='bg-indigo-600 hover:bg-indigo-700 text-white'>
+            variant='kumpel'
+            disabled={!canSend || !input.trim()}
+            className='h-11 shrink-0 px-5 font-semibold'>
             Send
           </Button>
         </form>

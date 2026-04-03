@@ -1,0 +1,54 @@
+# Kumpel — Cursor rules
+
+## Project context
+
+Before making non-trivial changes, read **`doc/project_analysis.md`**. It describes the stack (Next.js App Router, Phoenix WebSockets, Zustand, shadcn/ui), env vars (`NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_WS_URL`), routing, and backend contract.
+
+## Documentation
+
+- **Treat docs as part of the same task** as the code change. When a task adds or changes behavior, APIs, env vars, folder layout, deployment, or tooling, **update every related doc in the same pass** (at minimum **`doc/project_analysis.md`** when the architecture or contract shifts).
+- **Also refresh `README.md`** when user-facing setup, prerequisites, scripts, or high-level features change in a way readers would notice.
+- If you add **new files under `doc/`**, link them from `README.md` or `doc/project_analysis.md` when that helps discovery.
+- Do **not** leave documentation stale after a task: outdated docs are a bug like failing tests.
+
+## Next.js (App Router) — practices for this repo
+
+- **Default to Server Components** in `src/app/**` when adding new routes or layouts. Add **`'use client'`** only when the file needs hooks, browser APIs, event handlers, or Zustand/React state.
+- **Colocate route UI** in `page.tsx` / `layout.tsx`; keep heavy UI in `src/components/` and import it. Match existing patterns: thin `page.tsx` files that render a single feature component are fine.
+- Use **`next/link`** and **`next/navigation`** (`useRouter`, etc.) for client navigation; avoid full page reloads for in-app links.
+- **Metadata**: define `metadata` / `generateMetadata` in server layouts/pages where SEO or social cards matter; the root layout already sets site metadata.
+- **Images**: prefer **`next/image`** for static assets in `public/` when you need optimization; keep `alt` text meaningful.
+- **Environment**: only **`NEXT_PUBLIC_*`** vars are exposed to the browser. Server-only secrets must **not** use that prefix. API/WebSocket bases belong in `src/config.ts` — extend there instead of scattering `process.env` in components.
+- **Fetching**: this app mostly uses **client `fetch`** to Phoenix REST. If you add **Server Component** data fetching, use Next.js caching/revalidate semantics intentionally (`fetch` options or `unstable_cache` as appropriate). Do not assume `fetch` in RSC is uncached unless you design it that way.
+- **Loading and errors**: consider **`loading.tsx`** and **`error.tsx`** (and `not-found.tsx`) next to routes when UX benefits; the dashboard already handles loading inline.
+
+## React and state
+
+- **Zustand**: stores live under **`src/app/stores/`**; re-export from `src/app/stores/index.ts` when adding stores. If persistence touches **`localStorage`**, ensure UI that depends on it either runs only on the client or follows the existing **`StoreHydration`** pattern in `RootLayout` to avoid hydration mismatches.
+- **Custom hooks**: place them under **`src/app/hooks/`** and import with **`@/hooks/…`** (see `tsconfig.json` path mapping and `components.json`).
+- **Effects**: list complete, correct dependency arrays; if you suppress `exhaustive-deps`, add a short comment explaining why (see existing `ChatRoom` pattern).
+
+## Styling and UI
+
+- The app uses a **Discord-adjacent design system**: Tailwind **`kumpel.*`** colors, **`kumpel-auth-*`** / **`kumpel-link`** utilities in **`globals.css`**, shared field classes in **`src/lib/kumpel-ui.ts`**, and Button variant **`kumpel`**. See **`doc/project_analysis.md` → UI & design system** before large visual changes.
+- **shadcn/ui**: add or extend components under **`src/components/ui/`**; use **`cn()`** from **`@/lib/utils`** for conditional classes. Prefer composition over forking primitives unnecessarily.
+- Path alias **`@/*`** maps to **`src/*`** (`tsconfig.json`).
+
+## TypeScript and quality
+
+- Keep **`strict`** typing; avoid `any` unless unavoidable and localized.
+- Share API/domain types in **`src/type/`** (or colocated types) instead of duplicating large interfaces across components.
+- Run **`yarn lint`** after substantive edits; fix new ESLint issues in touched files.
+
+## Realtime (Phoenix)
+
+- WebSocket URL and channel naming are documented in **`doc/project_analysis.md`**. When changing **`useChannel`** or join payloads, verify against the Phoenix backend’s channel module and auth expectations.
+
+## Tooling
+
+- Use **Yarn 4** (**`yarn`** / **`yarn dev`**) per `packageManager` in `package.json`. Dev server uses **Turbopack** (`next dev --turbopack`).
+
+## Scope of edits
+
+- Prefer **minimal, task-focused diffs**. Do not refactor unrelated files or rename broadly without cause.
+- **Documentation** is not “extra scope”: when the task touches something documented elsewhere, update those docs in the same change set (see **Documentation** above).

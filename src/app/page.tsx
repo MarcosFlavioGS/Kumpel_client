@@ -7,6 +7,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useUserStore } from '@/app/stores'
 import { API_URL } from '@/config'
+import { MessagesSquare } from 'lucide-react'
+import { kumpelInputClassName, kumpelLabelClass } from '@/lib/kumpel-ui'
 
 interface ValidationError {
   [key: string]: string[]
@@ -18,6 +20,7 @@ export default function Home() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [validationErrors, setValidationErrors] = useState<ValidationError>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter()
   const setToken = useUserStore((state) => state.setToken)
 
@@ -25,6 +28,7 @@ export default function Home() {
     e.preventDefault()
     setError(null)
     setValidationErrors({})
+    setIsSubmitting(true)
 
     try {
       const response = await fetch(`${API_URL}/api/users`, {
@@ -39,7 +43,6 @@ export default function Home() {
 
       if (!response.ok) {
         if (data.errors) {
-          // Handle validation errors
           setValidationErrors(data.errors)
           return
         }
@@ -48,9 +51,11 @@ export default function Home() {
 
       setToken(data.token)
       router.push('/dashboard')
-    } catch (error) {
-      console.error('Error creating account:', error)
-      setError(error instanceof Error ? error.message : 'Failed to create account')
+    } catch (err) {
+      console.error('Error creating account:', err)
+      setError(err instanceof Error ? err.message : 'Failed to create account')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -62,22 +67,29 @@ export default function Home() {
   }
 
   return (
-    <div className='min-h-screen bg-[#36393f] flex flex-col items-center justify-center p-4'>
-      <div className='w-full max-w-md space-y-8 bg-[#2f3136] p-8 rounded-lg border border-[#202225]'>
+    <div className='kumpel-auth-bg'>
+      <div className='kumpel-auth-panel'>
         <div className='text-center'>
-          <h1 className='text-2xl font-bold text-white'>Welcome to Kumpel</h1>
-          <p className='mt-2 text-gray-400'>Create an account to get started</p>
+          <div className='mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-kumpel-accent/15 ring-1 ring-kumpel-accent/30'>
+            <MessagesSquare
+              className='h-8 w-8 text-kumpel-accent'
+              aria-hidden
+            />
+          </div>
+          <h1 className='text-2xl font-bold tracking-tight text-white'>Welcome to Kumpel</h1>
+          <p className='mt-2 text-sm text-kumpel-muted'>Create an account to get started</p>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className='mt-8 space-y-6'>
+          className='mt-2 space-y-5'
+          noValidate>
           <div className='space-y-4'>
             <div>
               <label
                 htmlFor='name'
-                className='block text-sm font-medium text-gray-300'>
-                Name
+                className={kumpelLabelClass}>
+                Display name
               </label>
               <Input
                 id='name'
@@ -85,19 +97,23 @@ export default function Home() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className={`mt-1 bg-[#40444b] border-[#202225] text-white placeholder:text-gray-400 focus:border-indigo-500 ${
-                  getErrorMessage('name') ? 'border-red-500' : ''
-                }`}
+                autoComplete='name'
+                aria-invalid={Boolean(getErrorMessage('name'))}
+                className={`mt-1.5 ${kumpelInputClassName({ invalid: Boolean(getErrorMessage('name')) })}`}
               />
               {getErrorMessage('name') && (
-                <p className='mt-1 text-sm text-red-400'>{getErrorMessage('name')}</p>
+                <p
+                  className='mt-1.5 text-sm text-kumpel-danger'
+                  role='alert'>
+                  {getErrorMessage('name')}
+                </p>
               )}
             </div>
 
             <div>
               <label
                 htmlFor='email'
-                className='block text-sm font-medium text-gray-300'>
+                className={kumpelLabelClass}>
                 Email
               </label>
               <Input
@@ -106,19 +122,23 @@ export default function Home() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className={`mt-1 bg-[#40444b] border-[#202225] text-white placeholder:text-gray-400 focus:border-indigo-500 ${
-                  getErrorMessage('mail') ? 'border-red-500' : ''
-                }`}
+                autoComplete='email'
+                aria-invalid={Boolean(getErrorMessage('mail'))}
+                className={`mt-1.5 ${kumpelInputClassName({ invalid: Boolean(getErrorMessage('mail')) })}`}
               />
               {getErrorMessage('mail') && (
-                <p className='mt-1 text-sm text-red-400'>{getErrorMessage('mail')}</p>
+                <p
+                  className='mt-1.5 text-sm text-kumpel-danger'
+                  role='alert'>
+                  {getErrorMessage('mail')}
+                </p>
               )}
             </div>
 
             <div>
               <label
                 htmlFor='password'
-                className='block text-sm font-medium text-gray-300'>
+                className={kumpelLabelClass}>
                 Password
               </label>
               <Input
@@ -127,35 +147,46 @@ export default function Home() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className={`mt-1 bg-[#40444b] border-[#202225] text-white placeholder:text-gray-400 focus:border-indigo-500 ${
-                  getErrorMessage('password') ? 'border-red-500' : ''
-                }`}
+                autoComplete='new-password'
+                aria-invalid={Boolean(getErrorMessage('password'))}
+                className={`mt-1.5 ${kumpelInputClassName({ invalid: Boolean(getErrorMessage('password')) })}`}
               />
               {getErrorMessage('password') && (
-                <p className='mt-1 text-sm text-red-400'>{getErrorMessage('password')}</p>
+                <p
+                  className='mt-1.5 text-sm text-kumpel-danger'
+                  role='alert'>
+                  {getErrorMessage('password')}
+                </p>
               )}
             </div>
           </div>
 
-          {error && <div className='text-sm text-red-400'>{error}</div>}
+          {error && (
+            <div
+              className='rounded-lg border border-kumpel-danger/40 bg-kumpel-danger/10 px-3 py-2 text-sm text-red-200'
+              role='alert'>
+              {error}
+            </div>
+          )}
 
           <Button
             type='submit'
-            className='w-full bg-indigo-600 hover:bg-indigo-700 text-white'>
-            Create Account
+            variant='kumpel'
+            disabled={isSubmitting}
+            className='h-11 w-full text-[15px] font-semibold'
+            aria-busy={isSubmitting}>
+            {isSubmitting ? 'Creating account…' : 'Create account'}
           </Button>
         </form>
 
-        <div className='text-center'>
-          <p className='text-sm text-gray-400'>
-            Already have an account?{' '}
-            <Link
-              href='/login'
-              className='text-indigo-400 hover:text-indigo-300'>
-              Log in
-            </Link>
-          </p>
-        </div>
+        <p className='text-center text-sm text-kumpel-muted'>
+          Already have an account?{' '}
+          <Link
+            href='/login'
+            className='kumpel-link'>
+            Log in
+          </Link>
+        </p>
       </div>
     </div>
   )

@@ -16,6 +16,8 @@ import { Label } from '@/components/ui/label'
 import { useUserStore } from '@/app/stores'
 import { useRouter } from 'next/navigation'
 import { API_URL } from '@/config'
+import { kumpelInputClassName, kumpelLabelClass } from '@/lib/kumpel-ui'
+import { UserPlus } from 'lucide-react'
 
 interface SubscribeRoomDialogProps {
   /** Called after a successful subscribe so the parent can refresh room list (e.g. silent refetch). */
@@ -61,14 +63,13 @@ export function SubscribeRoomDialog({ onSubscribed }: SubscribeRoomDialogProps) 
         )
       }
 
-      // Only refresh and close dialog on successful subscription
       setOpen(false)
       setRoomName('')
       setCode('')
       onSubscribed?.()
       router.refresh()
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to subscribe to room')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to subscribe to room')
     } finally {
       setIsLoading(false)
     }
@@ -78,58 +79,81 @@ export function SubscribeRoomDialog({ onSubscribed }: SubscribeRoomDialogProps) 
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
-          variant="outline"
-          className="w-full bg-[#40444b] hover:bg-[#36393f] text-white border-[#202225]">
-          Subscribe to room
+          variant='outline'
+          className='h-10 w-full gap-2 border-kumpel-border bg-kumpel-input font-medium text-white hover:bg-kumpel-hover hover:text-white'>
+          <UserPlus className='h-4 w-4' />
+          Join with code
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] bg-[#2f3136] border-[#202225] text-white">
+      <DialogContent className='sm:max-w-[440px] rounded-xl border-kumpel-border bg-kumpel-sidebar text-white shadow-kumpel-glow'>
         <DialogHeader>
-          <DialogTitle className="text-white">Subscribe to a Room</DialogTitle>
-          <DialogDescription className="text-gray-400">
-            Enter the room name and access code shared by the host (no room ID needed).
+          <DialogTitle className='text-lg text-white'>Join a channel</DialogTitle>
+          <DialogDescription className='text-kumpel-muted'>
+            Enter the exact channel name and access code someone shared with you.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="roomName" className="text-right text-gray-300">
-              Room name
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            void handleSubscribe()
+          }}
+          className='grid gap-4 py-2'>
+          <div className='space-y-2'>
+            <Label
+              htmlFor='subscribe-room-name'
+              className={kumpelLabelClass}>
+              Channel name
             </Label>
             <Input
-              id="roomName"
+              id='subscribe-room-name'
               value={roomName}
               onChange={(e) => setRoomName(e.target.value)}
-              className="col-span-3 bg-[#40444b] border-[#202225] text-white placeholder:text-gray-400 focus:border-indigo-500"
-              type="text"
-              placeholder="Exact name of the room"
+              className={kumpelInputClassName()}
+              type='text'
+              placeholder='Exact name of the channel'
+              autoComplete='off'
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="code" className="text-right text-gray-300">
-              Access Code
+          <div className='space-y-2'>
+            <Label
+              htmlFor='subscribe-room-code'
+              className={kumpelLabelClass}>
+              Access code
             </Label>
             <Input
-              id="code"
+              id='subscribe-room-code'
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              className="col-span-3 bg-[#40444b] border-[#202225] text-white placeholder:text-gray-400 focus:border-indigo-500"
-              placeholder="Enter access code"
+              className={kumpelInputClassName()}
+              placeholder='Paste access code'
+              autoComplete='off'
             />
           </div>
-          {error && (
-            <div className="col-span-4 text-sm text-red-400 text-center">{error}</div>
-          )}
-        </div>
-        <DialogFooter>
-          <Button
-            type="submit"
-            onClick={handleSubscribe}
-            disabled={isLoading}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white">
-            {isLoading ? 'Subscribing...' : 'Subscribe'}
-          </Button>
-        </DialogFooter>
+          {error ? (
+            <div
+              className='rounded-lg border border-kumpel-danger/35 bg-kumpel-danger/10 px-3 py-2 text-sm text-red-200'
+              role='alert'>
+              {error}
+            </div>
+          ) : null}
+          <DialogFooter className='gap-2 sm:gap-0'>
+            <Button
+              type='button'
+              variant='outline'
+              className='border-kumpel-border bg-kumpel-input text-white hover:bg-kumpel-hover hover:text-white'
+              onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              type='submit'
+              variant='kumpel'
+              disabled={isLoading}
+              className='font-semibold'>
+              {isLoading ? 'Joining…' : 'Join channel'}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )
-} 
+}

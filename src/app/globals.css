@@ -2,16 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-@font-face {
-  font-family: 'Meslo Nerd Font';
-  src: url('./fonts/MesloLGSNerdFont-Regular.ttf') format('trueType');
-  font-weight: normal;
-  font-style: normal;
-}
-
-body {
-  font-family: 'Meslo Nerd Font';
-}
+/**
+ * App shell uses next/font (Inter) from layout — no global monospace override.
+ * Discord-adjacent theme tokens: tailwind `kumpel.*` + `.dark` shadcn variables below.
+ */
 
 @layer base {
   :root {
@@ -41,26 +35,28 @@ body {
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
+
+  /* Aligned with Kumpel / Discord-style dark shell */
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --background: 223 7% 19%;
+    --foreground: 210 11% 96%;
+    --card: 223 7% 17%;
+    --card-foreground: 210 11% 96%;
+    --popover: 223 7% 17%;
+    --popover-foreground: 210 11% 96%;
+    --primary: 235 86% 65%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 223 6% 22%;
+    --secondary-foreground: 210 11% 96%;
+    --muted: 223 6% 22%;
+    --muted-foreground: 223 5% 61%;
+    --accent: 223 6% 24%;
+    --accent-foreground: 210 11% 96%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
+    --border: 223 5% 26%;
+    --input: 223 5% 26%;
+    --ring: 235 86% 65%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
@@ -75,5 +71,25 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /* Auth screens: soft blurple glow + deep grey (Discord-adjacent) */
+  .kumpel-auth-bg {
+    @apply min-h-screen flex flex-col items-center justify-center p-4 sm:p-6;
+    background:
+      radial-gradient(ellipse 100% 70% at 50% -30%, rgba(88, 101, 242, 0.22), transparent 55%),
+      radial-gradient(ellipse 60% 45% at 100% 0%, rgba(88, 101, 242, 0.1), transparent 50%),
+      radial-gradient(ellipse 50% 40% at 0% 100%, rgba(88, 101, 242, 0.08), transparent 45%),
+      #313338;
+  }
+
+  .kumpel-auth-panel {
+    @apply w-full max-w-md space-y-8 rounded-2xl border border-white/[0.07] bg-kumpel-sidebar/90 p-8 shadow-kumpel-glow backdrop-blur-xl;
+  }
+
+  .kumpel-link {
+    @apply font-medium text-kumpel-accent transition-colors hover:text-kumpel-accent-hover hover:underline underline-offset-4;
   }
 }

@@ -2,6 +2,8 @@
 
 A modern, real-time chat application built with Next.js and Phoenix WebSocket.
 
+For a maintainer-oriented overview (stack, env vars, API/WebSocket shape, deployment), see **[`doc/project_analysis.md`](doc/project_analysis.md)**.
+
 ## 🚀 Features
 
 - **Real-time Messaging**: Instant message delivery using WebSocket technology
@@ -16,7 +18,7 @@ A modern, real-time chat application built with Next.js and Phoenix WebSocket.
 ## 🛠️ Tech Stack
 
 - **Frontend**:
-  - Next.js 14 (App Router)
+  - Next.js 15 (App Router)
   - React
   - TypeScript
   - Tailwind CSS
@@ -93,6 +95,7 @@ kumpel_app/
 │   │   ├── chatRoom.tsx   # Chat room interface
 │   │   └── ...           # Other components
 │   └── type/              # TypeScript type definitions
+├── doc/                   # Architecture notes (see project_analysis.md)
 ├── public/                # Static assets
 └── ...                   # Configuration files
 ```
@@ -121,14 +124,12 @@ kumpel_app/
 
 User and room identifiers in API responses are UUID strings. WebSocket channel topics use `chat_room:<room_uuid>` with join payload `{ "code": "<access code>" }`.
 
-## 🎨 UI Components
+## 🎨 UI & UX
 
-- Custom scrollbars
-- Responsive layouts
-- Dark theme
-- Loading states
-- Error handling
-- Form validation
+- **Discord-inspired dark UI**: blurple accent (`#5865F2`), layered greys (`kumpel.*` tokens in Tailwind), soft panel shadows, and glass-style auth cards (`kumpel-auth-bg` / `kumpel-auth-panel` in `globals.css`).
+- **Dashboard**: channel sidebar with selection states, skeleton loading, empty-state guidance, accessible channel rows (buttons).
+- **Chat**: connection status indicator, join-error banner, message bubbles with hover affordance, “jump to latest” when scrolled up, composer reflects connection state.
+- Shared form styling lives in **`src/lib/kumpel-ui.ts`**; full design notes are in **[`doc/project_analysis.md`](doc/project_analysis.md)** (section *UI & design system*).
 
 ## 🤝 Contributing
 

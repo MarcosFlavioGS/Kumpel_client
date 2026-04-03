@@ -15,6 +15,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useUserStore } from '@/app/stores'
 import { API_URL } from '@/config'
+import { kumpelInputClassName, kumpelLabelClass } from '@/lib/kumpel-ui'
+import { Plus } from 'lucide-react'
 
 export interface CreatedRoom {
   id: string
@@ -102,41 +104,66 @@ export function CreateRoomDialog({ onCreated }: CreateRoomDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">Create room</Button>
+        <Button
+          variant='kumpel'
+          className='h-10 w-full gap-2 font-semibold'>
+          <Plus className='h-4 w-4' />
+          Create channel
+        </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] bg-[#2f3136] border-[#202225] text-white">
+      <DialogContent className='sm:max-w-[440px] rounded-xl border-kumpel-border bg-kumpel-sidebar text-white shadow-kumpel-glow'>
         <DialogHeader>
-          <DialogTitle className="text-white">Create a room</DialogTitle>
-          <DialogDescription className="text-gray-400">
-            Pick a name; the server creates a random access code. You will see it in the sidebar and can share it with guests.
+          <DialogTitle className='text-lg text-white'>Create a channel</DialogTitle>
+          <DialogDescription className='text-kumpel-muted'>
+            Choose a name. The server generates an access code you can share so others can join.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="create-room-name" className="text-right text-gray-300">
-              Name
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            void handleCreate()
+          }}
+          className='grid gap-4 py-2'>
+          <div className='space-y-2'>
+            <Label
+              htmlFor='create-room-name'
+              className={kumpelLabelClass}>
+              Channel name
             </Label>
             <Input
-              id="create-room-name"
+              id='create-room-name'
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="col-span-3 bg-[#40444b] border-[#202225] text-white placeholder:text-gray-400 focus:border-indigo-500"
-              type="text"
-              placeholder="Room name"
-              autoComplete="off"
+              className={kumpelInputClassName()}
+              type='text'
+              placeholder='e.g. weekend-plans'
+              autoComplete='off'
             />
           </div>
-          {error && <div className="col-span-4 text-sm text-red-400 text-center">{error}</div>}
-        </div>
-        <DialogFooter>
-          <Button
-            type="submit"
-            onClick={handleCreate}
-            disabled={isLoading}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white">
-            {isLoading ? 'Creating…' : 'Create'}
-          </Button>
-        </DialogFooter>
+          {error ? (
+            <div
+              className='rounded-lg border border-kumpel-danger/35 bg-kumpel-danger/10 px-3 py-2 text-sm text-red-200'
+              role='alert'>
+              {error}
+            </div>
+          ) : null}
+          <DialogFooter className='gap-2 sm:gap-0'>
+            <Button
+              type='button'
+              variant='outline'
+              className='border-kumpel-border bg-kumpel-input text-white hover:bg-kumpel-hover hover:text-white'
+              onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              type='submit'
+              variant='kumpel'
+              disabled={isLoading}
+              className='font-semibold'>
+              {isLoading ? 'Creating…' : 'Create'}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { StoreHydration } from '@/components/storeHydration'
+import { cn } from '@/lib/utils'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -21,8 +22,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang='en'>
-      <body className={inter.className}>
+    <html
+      lang='en'
+      className='dark'
+      suppressHydrationWarning>
+      <body className={cn(inter.className, 'min-h-screen antialiased bg-kumpel-bg text-foreground')}>
         <StoreHydration>{children}</StoreHydration>
       </body>
     </html>

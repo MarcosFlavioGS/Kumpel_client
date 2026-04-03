@@ -10,6 +10,22 @@ export default {
   theme: {
   	extend: {
   		colors: {
+  			/* Discord-adjacent app shell (see doc/project_analysis.md — UI & design) */
+  			kumpel: {
+  				bg: '#313338',
+  				sidebar: '#2b2d31',
+  				elevated: '#1e1f22',
+  				card: '#2f3136',
+  				input: '#383a40',
+  				border: '#3f4147',
+  				hover: '#35373c',
+  				'hover-strong': '#3c3f45',
+  				accent: '#5865F2',
+  				'accent-hover': '#4752C4',
+  				muted: '#949BA4',
+  				danger: '#ED4245',
+  				success: '#23A559'
+  			},
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
@@ -55,6 +71,10 @@ export default {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
+  		},
+  		boxShadow: {
+  			'kumpel-glow': '0 0 0 1px rgba(255,255,255,0.06), 0 25px 50px -12px rgba(0,0,0,0.45)',
+  			'kumpel-accent': '0 8px 32px -8px rgba(88, 101, 242, 0.45)'
   		}
   	}
   },
