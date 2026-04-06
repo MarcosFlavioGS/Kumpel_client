@@ -17,7 +17,7 @@ export default function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter()
   const token = useUserStore((state) => state.token)
-  const setToken = useUserStore((state) => state.setToken)
+  const setTokens = useUserStore((state) => state.setTokens)
 
   useEffect(() => {
     if (token) {
@@ -46,8 +46,11 @@ export default function Login() {
         )
       }
 
-      const data = await response.json()
-      setToken(data.token)
+      const data = await response.json() as { token: string; refresh?: string }
+      setTokens({
+        token: data.token,
+        refreshToken: typeof data.refresh === 'string' ? data.refresh : ''
+      })
       router.replace('/dashboard')
     } catch (err) {
       console.error('Error logging in:', err)

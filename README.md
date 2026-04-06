@@ -9,7 +9,7 @@ For a maintainer-oriented overview (stack, env vars, API/WebSocket shape, deploy
 - **Real-time Messaging**: Instant message delivery using WebSocket technology
 - **Room Management**: Create and join chat rooms with unique codes
 - **User Authentication**: Secure login and registration system
-- **Persistent Sessions**: Stay logged in across page refreshes
+- **Persistent Sessions**: Access + refresh tokens in local storage; the client renews expired access tokens via the API’s refresh endpoint before retrying failed requests
 - **Modern UI**: Clean, dark-themed interface with smooth animations
 - **Responsive Design**: Works seamlessly on desktop and mobile devices
 - **User Colors**: Each user gets a unique color for better message distinction

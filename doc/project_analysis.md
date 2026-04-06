@@ -87,9 +87,10 @@ In development, **https/wss URLs pointing at localhost are rewritten to http/ws*
 
 ### Authentication & storage
 
-- **`useUserStore`**: `token`, `userName`, `email`; persisted to `localStorage` as `userStore`.
+- **`useUserStore`**: `token` (short-lived access JWT), **`refreshToken`** (long-lived refresh JWT), `userName`, `email`; persisted to `localStorage` as `userStore`.
+- **Refresh flow**: Phoenix issues access tokens (~1h) and refresh tokens (~30d). Login and registration responses include **`refresh`** alongside **`token`**. Authenticated REST calls use **`fetchWithAuth`** (`src/lib/api-auth.ts`): on **401**, the client runs a **single-flight** `POST /api/auth/refresh` with `{ "refresh": "<refresh_token>" }`, stores the new **`token`** + **`refresh`**, and retries the request once. Invalid/expired refresh clears the store (logout). A **network failure** during refresh leaves tokens in place and surfaces an error instead of logging the user out.
 - **`useChatStore`**: **`messagesByRoomId`** (per-room arrays, last **250** messages per room), **`unreadByRoomId`** (badge counts). Persisted under **`localStorage`** key **`kumpel-chat`** (`partialize` only messages + unread). **`resetChat`** on logout.
-- Dashboard redirects to `/` if there is no token or on **401** from `currentUser`.
+- Dashboard redirects to `/` if there is no token or when **`currentUser`** returns **401** after auth was cleared (e.g. invalid refresh).
 
 ### Realtime
 
@@ -104,7 +105,8 @@ In development, **https/wss URLs pointing at localhost are rewritten to http/ws*
 
 Aligned with `README.md`:
 
-- **REST** (base `API_URL`): register, login, `currentUser`, create room, subscribe to room.
+- **REST** (base `API_URL`): register, login, **`POST /api/auth/refresh`** (body `{ "refresh": "<token>" }`, returns `{ "token", "refresh" }`), `currentUser`, create room, subscribe to room.
+- **Registration** (`POST /api/users`): response includes **`token`** and **`refresh`** (same shape as login’s refresh field) so new accounts can rotate sessions without a second login.
 - **WebSocket**: topic `chat_room:<room_id>`, join payload includes room **code**; pushes/receives `new_message` (and related events as implemented server-side).
 
 ---
@@ -149,7 +151,7 @@ When you change colors, spacing, or UX patterns, update **`tailwind.config.ts`**
 
 ### Auth: back button and “session”
 
-- **Session today:** a **JWT** (and related fields) in **`useUserStore`**, **persisted in `localStorage`** as `userStore`. There is **no refresh-token flow** in this repo yet; longevity depends on **API token expiry** only.
+- **Session today:** **access + refresh JWTs** in **`useUserStore`**, **persisted in `localStorage`** as `userStore`. Access tokens expire on the API (~1 hour); the app renews them with **`/api/auth/refresh`** when a protected request returns **401** (see **`fetchWithAuth`**).
 - **Back button:** Previously, **history** could stack **`/login` → `/dashboard`**, so **Back** returned to the login UI even though the token still existed. **Fix:** after login/signup use **`router.replace('/dashboard')`** (no extra history entry for the auth screen), and **`/` + `/login`** **`useEffect`** redirect to **`/dashboard`** when a **token** is already present so Back to auth routes bounces forward instead of showing a dead login form.
 - **Stronger sessions (mostly backend):** **Refresh tokens** (short-lived access + long-lived refresh), **httpOnly cookies**, and **middleware**-based protection are **server concerns**; the SPA can then call a **refresh** endpoint before API/WebSocket calls. **OAuth** / **session cookies** follow the same pattern.
 
@@ -166,7 +168,7 @@ When you change colors, spacing, or UX patterns, update **`tailwind.config.ts`**
 - Consider **route groups**, **middleware**, or **server-side session checks** if you want stricter protection than client-only redirects.
 - **Stable message IDs** from the API would allow stricter list keys than `timestamp + index + user`.
 - **Message history API** (per room, `since` cursor) to **backfill** after reconnect or background; **Web Push** for notifications when the app is not active.
-- **Refresh-token** (or cookie session) flow on the **Phoenix** side and thin client glue to renew JWT before expiry.
+- **Proactive refresh** (renew access JWT shortly before expiry) to reduce **401** retries; optional **middleware** / route protection beyond client redirects.
 
 ---
 

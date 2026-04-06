@@ -19,7 +19,7 @@ export default function LandingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter()
   const token = useUserStore((state) => state.token)
-  const setUserToken = useUserStore((state) => state.setToken)
+  const setTokens = useUserStore((state) => state.setTokens)
   const setUserEmail = useUserStore((state) => state.setEmail)
   const setUserName = useUserStore((state) => state.setUserName)
 
@@ -43,8 +43,11 @@ export default function LandingPage() {
       })
 
       if (response.ok) {
-        const data = await response.json()
-        setUserToken(data.token)
+        const data = await response.json() as { token: string; refresh?: string }
+        setTokens({
+          token: data.token,
+          refreshToken: typeof data.refresh === 'string' ? data.refresh : ''
+        })
         setUserEmail(email)
         setUserName(email.split('@')[0] ?? email)
         router.push('/dashboard')

@@ -23,7 +23,7 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter()
   const token = useUserStore((state) => state.token)
-  const setToken = useUserStore((state) => state.setToken)
+  const setTokens = useUserStore((state) => state.setTokens)
 
   useEffect(() => {
     if (token) {
@@ -56,7 +56,10 @@ export default function Home() {
         throw new Error(data.message || 'Failed to create account')
       }
 
-      setToken(data.token)
+      setTokens({
+        token: data.token,
+        refreshToken: typeof data.refresh === 'string' ? data.refresh : ''
+      })
       router.replace('/dashboard')
     } catch (err) {
       console.error('Error creating account:', err)

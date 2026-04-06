@@ -13,8 +13,8 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useUserStore } from '@/app/stores'
 import { API_URL } from '@/config'
+import { fetchWithAuth } from '@/lib/api-auth'
 import { kumpelInputClassName, kumpelLabelClass } from '@/lib/kumpel-ui'
 import { Plus } from 'lucide-react'
 
@@ -43,8 +43,6 @@ export function CreateRoomDialog({ onCreated }: CreateRoomDialogProps) {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [open, setOpen] = useState(false)
-  const token = useUserStore((state) => state.token)
-
   const handleCreate = async () => {
     const trimmedName = name.trim()
 
@@ -57,11 +55,10 @@ export function CreateRoomDialog({ onCreated }: CreateRoomDialogProps) {
       setIsLoading(true)
       setError(null)
 
-      const response = await fetch(`${API_URL}/api/rooms`, {
+      const response = await fetchWithAuth(`${API_URL}/api/rooms`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           name: trimmedName

@@ -14,6 +14,7 @@ import { LogOut, Hash } from 'lucide-react'
 import { SubscribeRoomDialog } from './subscribeRoomDialog'
 import { CreateRoomDialog } from './createRoomDialog'
 import { API_URL } from '@/config'
+import { fetchWithAuth } from '@/lib/api-auth'
 import { cn } from '@/lib/utils'
 
 interface Room {
@@ -93,15 +94,14 @@ export default function Dashboard() {
         if (!silent) setIsLoading(true)
         setError(null)
 
-        const response = await fetch(`${API_URL}/api/currentUser`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        })
+        const response = await fetchWithAuth(`${API_URL}/api/currentUser`)
 
         if (response.status === 401) {
-          clearAuth()
-          router.push('/')
+          if (!useUserStore.getState().token) {
+            router.push('/')
+            return
+          }
+          setError('Could not verify your session. Check your connection and try again.')
           return
         }
 
@@ -163,7 +163,7 @@ export default function Dashboard() {
         if (!silent) setIsLoading(false)
       }
     },
-    [token, router, clearAuth, setUserName]
+    [router, setUserName]
   )
 
   useEffect(() => {

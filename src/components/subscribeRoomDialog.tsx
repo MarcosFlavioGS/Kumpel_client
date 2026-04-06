@@ -13,9 +13,9 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useUserStore } from '@/app/stores'
 import { useRouter } from 'next/navigation'
 import { API_URL } from '@/config'
+import { fetchWithAuth } from '@/lib/api-auth'
 import { kumpelInputClassName, kumpelLabelClass } from '@/lib/kumpel-ui'
 import { UserPlus } from 'lucide-react'
 
@@ -31,8 +31,6 @@ export function SubscribeRoomDialog({ onSubscribed }: SubscribeRoomDialogProps) 
   const [isLoading, setIsLoading] = useState(false)
   const [open, setOpen] = useState(false)
   const router = useRouter()
-  const token = useUserStore((state) => state.token)
-
   const handleSubscribe = async () => {
     if (!roomName.trim() || !code.trim()) {
       setError('Please fill in all fields')
@@ -43,11 +41,10 @@ export function SubscribeRoomDialog({ onSubscribed }: SubscribeRoomDialogProps) 
       setIsLoading(true)
       setError(null)
 
-      const response = await fetch(`${API_URL}/api/rooms/subscribe`, {
+      const response = await fetchWithAuth(`${API_URL}/api/rooms/subscribe`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           name: roomName.trim(),
