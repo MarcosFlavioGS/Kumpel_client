@@ -1,12 +1,12 @@
 'use client'
 
-import { useEffect, useState, useRef, useMemo } from 'react'
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react'
 import { useUserStore, useChatStore } from '@/app/stores'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useRoomSocket } from '@/components/roomSocketProvider'
-import { ChevronDown, ChevronLeft } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { kumpelFieldClass } from '@/lib/kumpel-ui'
 
@@ -43,13 +43,15 @@ export default function ChatRoom({ room, onNavigateBack }: ChatRoomProps) {
   const [input, setInput] = useState('')
   const [userColor, setUserColor] = useState('')
   const [isAtBottom, setIsAtBottom] = useState(true)
+  const [loadingHistory, setLoadingHistory] = useState(false)
   const messages = useChatStore((s) => s.messagesByRoomId[room.id])
+  const hasMore = useChatStore((s) => s.hasMoreByRoomId[room.id] ?? false)
   const user = useUserStore((state) => state.userName)
   const token = useUserStore((state) => state.token)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
 
-  const { sendRoomMessage, getRoomConnection, getRoomError } = useRoomSocket()
+  const { sendRoomMessage, getRoomConnection, getRoomError, loadMoreHistory } = useRoomSocket()
   const connectionStatus = getRoomConnection(room.id)
   const channelError = getRoomError(room.id)
 
@@ -116,6 +118,22 @@ export default function ChatRoom({ room, onNavigateBack }: ChatRoomProps) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- isAtBottom intentionally omitted; see history
   }, [messages])
+
+  const handleLoadMore = useCallback(async () => {
+    if (loadingHistory || !hasMore) return
+    const container = messagesContainerRef.current
+    const prevScrollHeight = container?.scrollHeight ?? 0
+    setLoadingHistory(true)
+    try {
+      await loadMoreHistory(room.id)
+      // Preserve scroll position after prepending older messages
+      if (container) {
+        container.scrollTop += container.scrollHeight - prevScrollHeight
+      }
+    } finally {
+      setLoadingHistory(false)
+    }
+  }, [loadingHistory, hasMore, loadMoreHistory, room.id])
 
   if (!room) {
     return (
@@ -186,6 +204,20 @@ export default function ChatRoom({ room, onNavigateBack }: ChatRoomProps) {
           className='h-full min-h-0 w-full min-w-0 flex-1 overflow-y-auto border-kumpel-border/80 bg-kumpel-sidebar/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] md:w-[48rem] md:max-w-[48rem] md:flex-none md:border-x lg:w-[52rem] lg:max-w-[52rem] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-kumpel-elevated/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-kumpel-border hover:[&::-webkit-scrollbar-thumb]:bg-kumpel-hover-strong'
           onScroll={checkIfAtBottom}>
           <div className='space-y-1 px-3 py-4 sm:px-6'>
+            {hasMore ? (
+              <div className='flex justify-center pb-2'>
+                <Button
+                  type='button'
+                  variant='ghost'
+                  size='sm'
+                  disabled={loadingHistory}
+                  onClick={() => void handleLoadMore()}
+                  className='gap-1 text-xs text-kumpel-muted hover:text-white'>
+                  <ChevronUp className='h-3.5 w-3.5' />
+                  {loadingHistory ? 'Loading…' : 'Load earlier messages'}
+                </Button>
+              </div>
+            ) : null}
             {list.length === 0 ? (
               <p className='py-12 text-center text-sm text-kumpel-muted'>
                 No messages yet. Say hello — this channel is quiet.
@@ -195,7 +227,7 @@ export default function ChatRoom({ room, onNavigateBack }: ChatRoomProps) {
               const isSelf = message.user === user
               return (
                 <div
-                  key={`${message.timestamp}-${index}-${message.user}`}
+                  key={message.id ?? `${message.timestamp}-${index}-${message.user}`}
                   className={cn(
                     'group flex gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-white/[0.03]',
                     isSelf && 'flex-row-reverse'

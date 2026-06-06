@@ -94,9 +94,10 @@ In development, **https/wss URLs pointing at localhost are rewritten to http/ws*
 
 ### Realtime
 
-- **`RoomSocketProvider`** (`src/components/roomSocketProvider.tsx`): one Phoenix **`Socket`** (`WS_URL/socket`, `params.token`), joins **every** listed room as `chat_room:<uuid>` with `{ code }`. Incoming **`new_message`** → **`appendMessageForRoom`**; if the channel is not **active** (see below), increments **unread** and may fire **`Notification`** when the document is hidden.
+- **`RoomSocketProvider`** (`src/components/roomSocketProvider.tsx`): one Phoenix **`Socket`** (`WS_URL/socket`, `params.token`), joins **every** listed room as `chat_room:<uuid>` with `{ code }`. Incoming **`new_message`** → **`appendMessageForRoom`** (deduplication by `id`); if the channel is not **active** (see below), increments **unread** and may fire **`Notification`** when the document is hidden.
+- **Phase 1 — Message history**: join ack payload includes `{ history: [...], has_more }`. On join, `prependHistoryForRoom` is called so persisted messages are visible immediately. The provider exposes **`loadMoreHistory(roomId)`** which calls `GET /api/rooms/:id/messages?before=<oldest_timestamp>` and prepends older pages.
 - **Active channel** (no unread for that room): `activeChannelId` = selected room when the user **sees** the chat — on **mobile**, only when the chat pane is open (`showMobileChat`); on **`md+`**, whenever a room is selected (split view). Implemented with **`useMediaQuery('(min-width: 768px)')`** in the dashboard.
-- **`ChatRoom`**: reads **`messagesByRoomId[room.id]`**, sends via **`useRoomSocket().sendRoomMessage`**, shows **per-room connection** status from the provider.
+- **`ChatRoom`**: reads **`messagesByRoomId[room.id]`**, sends via **`useRoomSocket().sendRoomMessage`**, shows **per-room connection** status from the provider. Shows a **"Load earlier messages"** button when `hasMoreByRoomId[room.id]` is true; scroll position is preserved after prepend.
 - **`useChannel`** (`@/hooks/useChannel`) remains available for simple single-channel usage; the dashboard uses **`RoomSocketProvider`** instead.
 
 ---
@@ -105,9 +106,10 @@ In development, **https/wss URLs pointing at localhost are rewritten to http/ws*
 
 Aligned with `README.md`:
 
-- **REST** (base `API_URL`): register, login, **`POST /api/auth/refresh`** (body `{ "refresh": "<token>" }`, returns `{ "token", "refresh" }`), `currentUser`, create room, subscribe to room.
+- **REST** (base `API_URL`): register, login, **`POST /api/auth/refresh`** (body `{ "refresh": "<token>" }`, returns `{ "token", "refresh" }`), `currentUser`, create room, subscribe to room, **`GET /api/rooms/:id/messages?before=<ISO>&limit=<n>`** (cursor-paginated history, Phase 1).
 - **Registration** (`POST /api/users`): response includes **`token`** and **`refresh`** (same shape as login’s refresh field) so new accounts can rotate sessions without a second login.
-- **WebSocket**: topic `chat_room:<room_id>`, join payload includes room **code**; pushes/receives `new_message` (and related events as implemented server-side).
+- **WebSocket**: topic `chat_room:<room_id>`, join payload includes room **code**; join ack returns `{ history, has_more }` for real rooms (Phase 1); pushes/receives `new_message`.
+- **Message shape**: `{ id, body, user, color, inserted_at }` from the server. The `Message` type adds `id?: string` and `timestamp` maps to `inserted_at` on history messages; live messages derive timestamp from `Date.now()` on the client.
 
 ---
 

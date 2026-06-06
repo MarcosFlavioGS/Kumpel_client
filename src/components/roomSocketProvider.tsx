@@ -11,8 +11,9 @@ import {
   type ReactNode
 } from 'react'
 import { Socket, Channel } from 'phoenix'
-import { WS_URL } from '@/config'
+import { WS_URL, API_URL } from '@/config'
 import { useChatStore } from '@/app/stores'
+import { fetchWithAuth } from '@/lib/api-auth'
 import type { Message } from '@/type/message/message'
 
 export type RoomConnection = 'disconnected' | 'connecting' | 'connected' | 'error'
@@ -31,6 +32,26 @@ interface RoomSocketContextValue {
   ) => boolean
   getRoomConnection: (roomId: string) => RoomConnection
   getRoomError: (roomId: string) => string | null
+  loadMoreHistory: (roomId: string) => Promise<void>
+}
+
+interface RawMessage {
+  id: string
+  body: string
+  user: string
+  color?: string
+  inserted_at: string
+}
+
+function rawToMessage(roomCode: string) {
+  return (raw: RawMessage): Message => ({
+    id: raw.id,
+    body: raw.body,
+    user: raw.user,
+    code: roomCode,
+    color: raw.color ?? '',
+    timestamp: raw.inserted_at
+  })
 }
 
 const RoomSocketContext = createContext<RoomSocketContextValue | null>(null)
@@ -175,9 +196,13 @@ export function RoomSocketProvider({
       setStatusByRoom((prev) => ({ ...prev, [room.id]: 'connecting' }))
 
       ch.join()
-        .receive('ok', () => {
+        .receive('ok', (resp: { history?: RawMessage[]; has_more?: boolean }) => {
           setStatusByRoom((prev) => ({ ...prev, [room.id]: 'connected' }))
           setErrorByRoom((prev) => ({ ...prev, [room.id]: null }))
+          if (Array.isArray(resp?.history)) {
+            const history = resp.history.map(rawToMessage(room.code))
+            useChatStore.getState().prependHistoryForRoom(room.id, history, resp.has_more ?? false)
+          }
         })
         .receive('error', (resp: { reason?: string } | string) => {
           const reason =
@@ -212,13 +237,31 @@ export function RoomSocketProvider({
     [errorByRoom]
   )
 
+  const loadMoreHistory = useCallback(async (roomId: string) => {
+    const messages = useChatStore.getState().messagesByRoomId[roomId] ?? []
+    const oldest = messages[0]
+    const before = oldest?.timestamp ? `?before=${encodeURIComponent(oldest.timestamp)}` : ''
+    const room = rooms.find((r) => r.id === roomId)
+    if (!room) return
+    try {
+      const res = await fetchWithAuth(`${API_URL}/api/rooms/${roomId}/messages${before}`)
+      if (!res.ok) return
+      const data = (await res.json()) as { data: RawMessage[]; has_more: boolean }
+      const history = data.data.map(rawToMessage(room.code))
+      useChatStore.getState().prependHistoryForRoom(roomId, history, data.has_more)
+    } catch {
+      /* network failure — silently ignore, user can retry */
+    }
+  }, [rooms])
+
   const value = useMemo(
     () => ({
       sendRoomMessage,
       getRoomConnection,
-      getRoomError
+      getRoomError,
+      loadMoreHistory
     }),
-    [sendRoomMessage, getRoomConnection, getRoomError]
+    [sendRoomMessage, getRoomConnection, getRoomError, loadMoreHistory]
   )
 
   return <RoomSocketContext.Provider value={value}>{children}</RoomSocketContext.Provider>
